@@ -11,7 +11,8 @@
 #pragma once
 
 namespace json {
-
+	
+	// 'nothing' contains nothing. Other data types can be empty but never null.
 	namespace types {
 		using string = std::string;
 		using uint32 = std::uint32_t;
@@ -24,7 +25,39 @@ namespace json {
 		using nothing = std::nullptr_t;
 	}
 
-	// Basic json node (key, value pair, value being a value, object, or array)
+	enum class enum_types {
+		value,
+		object,
+		array,
+		nothing
+	};
+
+	template<typename JsonType>
+	static constexpr enum_types getType() {
+		enum_types runtimeType;
+		if constexpr(std::is_same<JsonType, array>) {
+			runtimeType = enum_types::array;
+		} else if constexpr(std::is_same<JsonType, object>) {
+			runtimeType = enum_types::object;
+		} else if constexpr(std::is_same<JsonType, types::nothing>) {
+			runtimeType = enum_types::nothing;
+		} else if constexpr(std::is_same<JsonType, types::string>)
+			|| std::is_same<JsonType, types::int32>
+			|| std::is_same<JsonType, types::int64>
+			|| std::is_same<JsonType, types::uint32>
+			|| std::is_same<JsonType, types::uint64>
+			|| std::is_same<JsonType, types::float32>
+			|| std::is_same<JsonType, types::float64>
+			|| std::is_same<JsonType, types::boolean>) {
+			runtimeType = enum_types::value;
+		} else {
+			// compile time error. Can only support the listed json types.
+			runtimeType = enum_types::nothing;
+		}
+		return runtimeType;
+	}
+
+	// Basic json node with just a name
 	class node {
 	public:
 		node() : m_name({}) { }
@@ -48,9 +81,11 @@ namespace json {
 	public:
 		types::string m_name{};
 	};
-
+	
+	// Pointer to point to derived classes
 	using node_ptr = std::unique_ptr<node>;
 
+	// {name, value} json object
 	template<typename JsonType>
 	class value : public node {
 	public:
@@ -87,6 +122,7 @@ namespace json {
 		JsonType m_value{};
 	};
 
+	// ["a", 1, null, 1.0, {}, []] json object (can contain a variety of json types, which are either values, arrays, or objects
 	class array : public node {
 	public:
 		array() 
@@ -127,14 +163,8 @@ namespace json {
 			m_arr.pop_back();
 		}
 	private:
-		class array_node {
-		public:
-			virtual ~array_node() = default;
-		};
-		class array_element : public array_node {
-		public:
-			array_element()
-				: m_data(std::make_shared<array_element_model<json::types::nothing>>()) { }
+		// name-agnostic, type-erased value used by the array class
+		class array_element {
 		private:
 			class array_element_concept {
 				virtual ~array_element_concept() = default;
@@ -142,16 +172,36 @@ namespace json {
 			template<typename JsonType>
 			class array_element_model : public array_element_concept {
 			public:
-				array_element_model() = default;
+				array_element_model() 
+					: m_value(), m_runtimeType(getType<JsonType>()) { }
+				array_element_model(const array_element_model<JsonType>& other) 
+					: m_value(other.value), m_runtimeType(getType<JsonType>()) { }
+				array_element_model(array_element_model<JsonType>&& other)
+					: m_value(std::move(other.m_value)) { }
+				array_element_model& operator=(const array_element_model<JsonType>& other) {
+					*this = array_element_model<JsonType>(other);
+					return *this;
+				}
+				array_element_model& operator=(array_element_model<JsonType>&& other) {
+					*this = array_element_model<JsonType>(other);
+					return *this;
+				}
 				~array_element_model() = default;
 			public:
 				JsonType m_value;
+				json_enum_type m_runtimeType;
 			};
+		public:
+			array_element()
+				: m_data(std::make_shared<array_element_model<json::types::nothing>>()) { }
+			template<typename JsonType>
+			array_element()
+				: m_data(std::make_shared<array_element_model<JsonType>>()) { }
 		public:
 			std::shared_ptr<array_element_concept> m_data;
 		};
 	public:
-		std::vector<array_node> m_arr{};
+		std::vector<array_element> m_arr{};
 	};
 
 	class object : public node {
@@ -186,6 +236,11 @@ namespace json {
 		}
 		~object() { }
 	public:
+		template<typename JsonNode, typename... CtorArgs>
+		JsonNode& addNode(const types::string& name, CtorArgs... ctorArgs)  {
+			m_props.insert({ name, std::make_unique<JsonNode>(ctorArgs) });
+			return (JsonNode&) *m_props[name];
+		}
 		template<typename JsonType>
 		value<JsonType>& addValue(const types::string& name, const JsonType& temp) {
 			m_props.insert({ name, std::make_unique<value<JsonType>>(name, temp) });
