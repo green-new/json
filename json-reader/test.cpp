@@ -15,7 +15,7 @@ int json_test() {
 	parcelObj.addValue("address", "4056 state route 19"s);
 	parcelObj.addValue("municipality", "scio"s);
 	auto& arr = parcelObj.addArray("geodata");
-	arr.push({ new json::array("vectors"), new json::value("normalization", 10.0F) });
+	arr.push("hello"s);
 
 	json::value<json::types::int32>* val = new json::value{ "hello", 10 };
 
