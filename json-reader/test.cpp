@@ -1,7 +1,6 @@
 
 #include <iostream>
 #include "json.hpp"
-#include "parser.hpp"
 
 struct A {
 	int a, b, c;
@@ -17,6 +16,8 @@ int json_test() {
 	parcelObj.addValue("municipality", "scio"s);
 	auto& arr = parcelObj.addArray("geodata");
 	arr.push({ new json::array("vectors"), new json::value("normalization", 10.0F) });
+
+	json::value<json::types::int32>* val = new json::value{ "hello", 10 };
 
 	return 0;
 }

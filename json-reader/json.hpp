@@ -58,6 +58,8 @@ namespace json {
 			: node(), m_value() {}
 		explicit value(const JsonType& value) 
 			: node(), m_value(value) { }
+		explicit value(const char* name, const JsonType& value)
+			: node(types::string(name)), m_value(value) { }
 		explicit value(const types::string& name, const JsonType& value)
 			: node(name), m_value(value) { }
 		value(const value& other) {
@@ -124,8 +126,32 @@ namespace json {
 		void pop() {
 			m_arr.pop_back();
 		}
+	private:
+		class array_node {
+		public:
+			virtual ~array_node() = default;
+		};
+		class array_element : public array_node {
+		public:
+			array_element()
+				: m_data(std::make_shared<array_element_model<json::types::nothing>>()) { }
+		private:
+			class array_element_concept {
+				virtual ~array_element_concept() = default;
+			};
+			template<typename JsonType>
+			class array_element_model : public array_element_concept {
+			public:
+				array_element_model() = default;
+				~array_element_model() = default;
+			public:
+				JsonType m_value;
+			};
+		public:
+			std::shared_ptr<array_element_concept> m_data;
+		};
 	public:
-		std::vector<node_ptr> m_arr{};
+		std::vector<array_node> m_arr{};
 	};
 
 	class object : public node {
