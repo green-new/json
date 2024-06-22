@@ -124,8 +124,13 @@ namespace json {
 		}
 		~value() { }
 	public:
-		value& operator=(JsonType temp) {
+		value& operator(const JsonType& temp) {
 			m_value = temp;
+			return *this;
+		}
+		value& operator=(JsonType&& temp) noexcept {
+			m_value = temp;
+			return *this;
 		}
 	public:
 		JsonType m_value{};
@@ -150,13 +155,14 @@ namespace json {
 					: m_value(temp), m_runtimeType(getType<JsonType>()) { }
 				array_element_model(const array_element_model<JsonType>& other) 
 					: m_value(other.value), m_runtimeType(getType<JsonType>()) { }
-				array_element_model(array_element_model<JsonType>&& other)
-					: m_value(std::move(other.m_value)) { }
+				array_element_model(array_element_model<JsonType>&& other) noexcept {
+					std::swap(m_value, other.m_value);
+				}
 				array_element_model& operator=(const array_element_model<JsonType>& other) {
 					*this = array_element_model<JsonType>(other);
 					return *this;
 				}
-				array_element_model& operator=(array_element_model<JsonType>&& other) {
+				array_element_model& operator=(array_element_model<JsonType>&& other) noexcept {
 					*this = array_element_model<JsonType>(other);
 					return *this;
 				}
@@ -166,11 +172,11 @@ namespace json {
 				enum_types m_runtimeType;
 			};
 		public:
-			array_element()
-				: m_data(std::make_shared<array_element_model<json::types::nothing>>()) { }
+			array_element() = delete; // Cannot have array elements with absolutely nothing in them (e.g., [, , , ] - what is this???)
 			template<typename JsonType>
 			array_element(const JsonType& temp)
 				: m_data(std::make_shared<array_element_model<JsonType>>(temp)) { }
+			~array_element() = default;
 		public:
 			std::shared_ptr<array_element_concept> m_data;
 		};

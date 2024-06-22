@@ -1,10 +1,7 @@
 
 #include <iostream>
 #include "json.hpp"
-
-struct A {
-	int a, b, c;
-};
+#include "reader.hpp"
 
 int json_test() {
 	using namespace std::string_literals;
