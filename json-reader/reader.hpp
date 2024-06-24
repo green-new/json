@@ -12,7 +12,7 @@ namespace json {
 	public:
 		reader(const std::string& json)
 			: m_json(json), m_stream(json) {
-			// Remvoes whitespace
+			// Only remove whitespace outside json content (not in strings)
 			rmws(m_json);
 		}
 		reader(const reader& other) = delete;

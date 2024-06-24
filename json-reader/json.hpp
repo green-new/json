@@ -93,6 +93,10 @@ namespace json {
 	
 	// Pointer to point to derived classes
 	using node_ptr = std::unique_ptr<node>;
+	
+	// Typedef for creating node ptrs
+	template<typename JsonNode, typename... CtorArgs>
+	using new_node = std::make_unique<JsonNode>(...CtorArgs);
 
 	// {name, value} json object
 	template<typename JsonType>
@@ -228,13 +232,19 @@ namespace json {
 			: node(), m_props() { }
 		explicit object(const types::string& name)
 			: node(name) { }
+		explicit object(const types::string& name, std::initializer_list<node_ptr> list)
+			: node(name) {
+			for (node_ptr& elem : list) {
+				m_props.insert({elem.name, std::move(elem)});
+			}
+		}
 		object(const object& other) 
 			: node(other.m_name) {
 			// Cannot copy unique ptrs. Must do a deep manual copy
 			m_props.clear();
 			for (const auto& [key, nodePtr] : other.m_props) {
 				if (nodePtr) {
-					m_props.insert({ key, std::make_unique<node>(*nodePtr) });
+					m_props.insert({ key, new_node<node>(*nodePtr) });
 				} else {
 					m_props.insert({ key, node_ptr(nullptr) });
 				}
@@ -253,21 +263,21 @@ namespace json {
 		}
 		~object() { }
 	public:
-		template<typename JsonNode, typename... CtorArgs>
-		JsonNode& addNode(const types::string& name, CtorArgs... ctorArgs)  {
+		template<typename JsonNode = object, typename... CtorArgs>
+		JsonNode& new_node(const types::string& name, CtorArgs... ctorArgs)  {
 			m_props.insert({ name, std::make_unique<JsonNode>(name, ctorArgs...) });
 			return (JsonNode&) *m_props[name];
 		}
 		template<typename JsonType>
-		value<JsonType>& addValue(const types::string& name, const JsonType& temp) {
+		value<JsonType>& new_value(const types::string& name, const JsonType& temp) {
 			m_props.insert({ name, std::make_unique<value<JsonType>>(name, temp) });
 			return (value<JsonType>&) *m_props[name];
 		}
-		array& addArray(const types::string& name) {
+		array& new_array(const types::string& name) {
 			m_props.insert({ name, std::make_unique<array>(name) });
 			return (array&) *m_props[name];
 		}
-		object& addObject(const types::string& name) {
+		object& new_object(const types::string& name) {
 			m_props.insert({ name, std::make_unique<object>(name) });
 			return (object&) *m_props[name];
 		}

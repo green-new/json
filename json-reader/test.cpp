@@ -6,6 +6,7 @@
 
 int json_test2() {
 	// Maybe just assume all json strings are utf8 (web standard)
+	// Need special characters defined in Unicode
 	using namespace std::string_literals;
 	std::string json = "{"
 		"\"Hello\": 123,"
