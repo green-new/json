@@ -1,0 +1,22 @@
+{
+  "Hello": 123,
+  "asdf": [
+    1,
+    "2",
+    3.0,
+    { "4": 4 },
+    {},
+    [ "💀💀💀💀💀💀" ],
+    null
+  ],
+  "true": true,
+  "false": false,
+  "object": null,
+  "apple": {
+    "rotting": false,
+    "delicious": true,
+    "weight": 120.0,
+    "parents": [ "joe", "maria", "ryan" ],
+    "𡞰":  123
+  }
+}

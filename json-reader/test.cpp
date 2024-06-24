@@ -1,7 +1,41 @@
-
+﻿
 #include <iostream>
+#include <fstream>
 #include "json.hpp"
 #include "reader.hpp"
+
+int json_test2() {
+	// Maybe just assume all json strings are utf8 (web standard)
+	using namespace std::string_literals;
+	std::string json = "{"
+		"\"Hello\": 123,"
+		"\"asdf\" : ["
+		"1,"
+		"	\"2\","
+		"	3.0,"
+		"{ \"4\": 4 },"
+		"{},"
+		"	[\"💀💀💀💀💀💀\"],"
+		"null"
+		"] ,"
+		"\"true\": true,"
+		"\"false\" : false,"
+		"\"object\" : null,"
+		"\"apple\" : {"
+		"\"rotting\": false,"
+		"\"delicious\" : true,"
+		"\"weight\" : 120.0,"
+		"\"parents\" : [\"joe\", \"maria\", \"ryan\"],"
+		"\"哈\": \"haha\""
+		"}"s;
+	for (int i = 0; i < json.length(); i++) {
+		std::cout << json[i] << ' ';
+	}
+	std::cout << std::endl;
+	// json::reader reader(json);
+	
+	return 0;
+}
 
 int json_test() {
 	using namespace std::string_literals;
@@ -22,8 +56,8 @@ int json_test() {
 int main(int argc, char** argv) {
 	int exit = 0;
 
-	exit = json_test();
-	// exit = json2_test();
+	// exit = json_test();
+	exit = json_test2();
 
 	return exit;
 }

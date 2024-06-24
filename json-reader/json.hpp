@@ -106,7 +106,7 @@ namespace json {
 			: node(types::string(name)), m_value(value) { }
 		explicit value(const types::string& name, const JsonType& value)
 			: node(name), m_value(value) { }
-		value(const value& other) 
+		value(const value& other)
 			: node(other.m_name) {
 			m_value = other.m_value;
 		}
@@ -124,7 +124,7 @@ namespace json {
 		}
 		~value() { }
 	public:
-		value& operator(const JsonType& temp) {
+		value& operator=(const JsonType& temp) {
 			m_value = temp;
 			return *this;
 		}
