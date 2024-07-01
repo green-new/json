@@ -41,12 +41,12 @@ int json_test2() {
 int json_test() {
 	using namespace std::string_literals;
 	json::object map{ "parcel" };
-	auto& parcelObj = map.addObject("199.18-3-6");
-	parcelObj.addValue("valuation", 1e6);
-	parcelObj.addValue("bedrooms", "3"s);
-	parcelObj.addValue("address", "4056 state route 19"s);
-	parcelObj.addValue("municipality", "scio"s);
-	auto& arr = parcelObj.addArray("geodata");
+	auto& parcelObj = map.insert_object("199.18-3-6");
+	parcelObj.insert_value("valuation", 1e6);
+	parcelObj.insert_value("bedrooms", "3"s);
+	parcelObj.insert_value("address", "4056 state route 19"s);
+	parcelObj.insert_value("municipality", "scio"s);
+	auto& arr = parcelObj.insert_array("geodata");
 	arr.push("hello"s);
 
 	json::value<json::types::int32>* val = new json::value{ "hello", 10 };

@@ -97,15 +97,29 @@ namespace json {
 	// Typedef for creating node ptrs
 	template<typename JsonNode, typename... CtorArgs>
 	using new_node = std::make_unique<JsonNode>(...CtorArgs);
+	
+	// Json dynamic type (full json value, empty or null). Empty is the result of optional => empty, and null is the result of the object being nullptr
+	template<typename Type>
+	class dynamic_type {
+	public:	
+		using value_opt = std::optional<std::unique_ptr<JsonType>>;
+		dynamic_type()
+			: m_value() { }
+		dynamic_type(const Type& val) 
+			: m_value(val) { }
+	private:
+		value_opt m_value;
+	}
 
 	// {name, value} json object
 	template<typename JsonType>
 	class value : public node {
 	public:
+		using value_opt = std::optional<std::unique_ptr<JsonType>>;
 		value() 
 			: node(), m_value() {}
 		explicit value(const JsonType& value) 
-			: node(), m_value(value) { }
+			: node(), m_value(std::make_optional<std::unique_ptr<JsonType>>(std::make_unique<JsonType>(value))) { }
 		explicit value(const char* name, const JsonType& value)
 			: node(types::string(name)), m_value(value) { }
 		explicit value(const types::string& name, const JsonType& value)
@@ -136,8 +150,17 @@ namespace json {
 			m_value = temp;
 			return *this;
 		}
+		bool is_null() const noexcept {
+			return m_value.value() == nullptr;
+		}
+		bool is_nan() const noexcept {
+			return std::is_nan(m_value.value().get());
+		}
+		bool is_empty() const noexcept {
+			return m_value.has_value();
+		}
 	public:
-		JsonType m_value{};
+		value_opt m_value{};
 	};
 
 	// ["a", 1, null, 1.0, {}, []] json object (can contain a variety of json types, which are either values, arrays, or objects)
@@ -185,6 +208,9 @@ namespace json {
 			std::shared_ptr<array_element_concept> m_data;
 		};
 	public:
+		using container = std::vector<array_element>;
+		using iterator = typename container::iterator;
+		using const_iterator = typename container::const_iterator;
 		array() 
 			: node() { }
 		explicit array(const types::string& name)
@@ -223,11 +249,27 @@ namespace json {
 			m_arr.pop_back();
 		}
 	public:
-		std::vector<array_element> m_arr{};
+		iterator begin() { 
+			return m_arr.begin();
+		}
+		iterator end() {
+			return m_arr.end();
+		}
+		const_iterator begin() const {
+			return m_arr.begin();
+		}
+		const_iterator end() const {
+			return m_arr.end();
+		}
+	private:
+		container m_arr{};
 	};
 
 	class object : public node {
 	public:
+		using prop_map = std::map<std::string, node_ptr>;
+		using iterator = prop_map::iterator;
+		using const_iterator = prop_map::const_iterator;
 		object() 
 			: node(), m_props() { }
 		explicit object(const types::string& name)
@@ -264,24 +306,37 @@ namespace json {
 		~object() { }
 	public:
 		template<typename JsonNode = object, typename... CtorArgs>
-		JsonNode& new_node(const types::string& name, CtorArgs... ctorArgs)  {
+		JsonNode& insert(const types::string& name, CtorArgs... ctorArgs)  {
 			m_props.insert({ name, std::make_unique<JsonNode>(name, ctorArgs...) });
 			return (JsonNode&) *m_props[name];
 		}
 		template<typename JsonType>
-		value<JsonType>& new_value(const types::string& name, const JsonType& temp) {
+		value<JsonType>& insert_value(const types::string& name, const JsonType& temp) {
 			m_props.insert({ name, std::make_unique<value<JsonType>>(name, temp) });
 			return (value<JsonType>&) *m_props[name];
 		}
-		array& new_array(const types::string& name) {
+		array& insert_array(const types::string& name) {
 			m_props.insert({ name, std::make_unique<array>(name) });
 			return (array&) *m_props[name];
 		}
-		object& new_object(const types::string& name) {
+		object& insert_object(const types::string& name) {
 			m_props.insert({ name, std::make_unique<object>(name) });
 			return (object&) *m_props[name];
 		}
+	public:
+		iterator begin() {
+			return m_props.begin();
+		}
+		iterator end() {
+			return m_props.end();
+		}
+		const_iterator begin() const {
+			return m_props.begin();
+		}
+		const_iterator end() const {
+			return m_props.end();
+		}
 	private:
-		std::map<types::string, node_ptr> m_props{};
+		prop_map m_props{};
 	};
 }

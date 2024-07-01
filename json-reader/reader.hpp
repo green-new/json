@@ -23,6 +23,8 @@ namespace json {
 		// Reading a json string can be anything, not just an object
 		std::unique_ptr<json::node> read() {
 			std::unique_ptr<json::node> res;
+			
+			
 
 			return std::move(res);
 		}
