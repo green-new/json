@@ -20,8 +20,9 @@ namespace json {
 		reader& operator=(const reader& other) = delete;
 		~reader() = default;
 	public:
-		std::unique_ptr<json::object> read() {
-			std::unique_ptr<json::object> res = std::make_unique<json::object>();
+		// Reading a json string can be anything, not just an object
+		std::unique_ptr<json::node> read() {
+			std::unique_ptr<json::node> res;
 
 			return std::move(res);
 		}
