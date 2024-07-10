@@ -1,3 +1,14 @@
+/**
+ * @file json.hpp
+ *
+ * @brief JSON classes for objects, arrays, numbers, values, and literals
+ *
+ * @addtogroup json
+ *
+ * @author green-new
+ * Contact: tristenwoodruff2@gmail.com
+ */
+
 #include <string>
 #include <fstream>
 #include <set>
@@ -9,10 +20,13 @@
 #include <memory>
 #include <initializer_list>
 #include <vector>
-#include <math.h>
+#include <cmath>
 
 #pragma once
 
+/**
+ * @brief JSON namespace that holds everything.
+ */
 namespace json {
 
 	// Forward declarations
@@ -22,7 +36,9 @@ namespace json {
 	class array;
 	class object;
 	
-	// 'nothing' contains nothing. Other data types can be empty but never null.
+	/**
+	 * @brief Typedefs for JSON types with standard library classes.
+	 */
 	namespace types {
 		using string = std::string;
 		using uint32 = std::uint32_t;
@@ -35,6 +51,11 @@ namespace json {
 		using nothing = std::nullptr_t;
 	}
 
+	/**
+	 * @enum json::enum_types
+	 *
+	 * @brief Enumeration of JSON types.
+	 */
 	enum class enum_types {
 		value,
 		object,
@@ -42,6 +63,13 @@ namespace json {
 		nothing
 	};
 
+	/**
+	 * @brief Returns the JSON type enum corresponding to the templated datatype.
+	 *
+	 * @tparam JsonType Concrete datatype from @c json::types @c.
+	 *
+	 * @return JSON type enum.
+	 */
 	template<typename JsonType>
 	static constexpr enum_types getType() {
 		enum_types runtimeType;
@@ -61,59 +89,133 @@ namespace json {
 			|| std::is_same<JsonType, types::boolean>()) {
 			runtimeType = enum_types::value;
 		} else {
-			// compile time error. Can only support the listed json types.
 			runtimeType = enum_types::nothing;
 		}
 		return runtimeType;
 	}
 
-	// Basic json node with just a name
+	/**
+	 * @class json::node
+	 *
+	 * @brief Abstract parent class used to represent concrete types.
+	 * Abstract parent class used to polymorphise concrete JSON classes used by this library. Contains the name of the node as a @c std::string .
+	 * 
+	 */
 	class node {
-	public:
+	protected:
+		/**
+		 * @brief Default ctor.
+		 * Default ctor. Default initializes @c m_name @c to an empty string.
+		 */
 		node() : m_name({}) { }
+		/**
+		 * @brief Name provided ctor.
+		 * Explicit ctor constructing this node with a provided `name`.
+		 * @param name Name/key of the node
+		 */
 		explicit node(const types::string& name) 
 			: m_name(name) { }
+		/**
+		 * @brief Copy ctor.
+		 */
 		node(const node& other) 
 			: m_name(other.m_name) { }
+		/**
+		 * @brief Move ctor.
+		 */
 		node(node&& other) noexcept {
 			std::swap(m_name, other.m_name);
 		}
+		/**
+		 * @brief Copy assignment.
+		 */
 		node& operator=(const node& other) {
 			*this = node(other);
 			return *this;
 		}
+		/**
+		 * @brief Move assignment.
+		 */
 		node& operator=(node&& other) noexcept {
 			*this = node(other);
 			return *this;
 		}
+		/**
+		 * @brief Trivial virtual destructor.
+		 */
 		virtual ~node() {}
 	public:
+		/**
+		 * @brief The name for this JSON node.
+		 */
 		types::string m_name{};
 	};
 	
-	// Pointer to point to derived classes
+	struct nullable {
+		virtual bool is_null() = 0;
+	};
+	
+	/**
+	 * @brief Typedef pointer for @c node -derived classes
+	 */
 	using node_ptr = std::unique_ptr<node>;
 	
-	// Typedef for creating node ptrs
-	template<typename JsonNode, typename... CtorArgs>
-	using new_node = std::make_unique<JsonNode>(...CtorArgs);
-	
-	// Json dynamic type (full json value, empty or null). Empty is the result of optional => empty, and null is the result of the object being nullptr
-	template<typename Type>
-	class dynamic_type {
-	public:	
-		using value_opt = std::optional<std::unique_ptr<JsonType>>;
-		dynamic_type()
-			: m_value() { }
-		dynamic_type(const Type& val) 
-			: m_value(val) { }
-	private:
-		value_opt m_value;
+	/**
+	 * @todo Class for JSON numbers (handling large values, integers, etc... and how to parse them properly.
+	 */
+	namespace number_types {
+		using uint = int64_t;
 	}
-
-	// {name, value} json object
+	
+	namespace storage_policy {
+		using integer = std::int64_t;
+		using uinteger = std::uint64_t;
+		using floating = std::double_t;
+	}
+	
+	template<typename Storage = storage_policy::floating>
+	class number final : public nullable {
+	public:
+		number()
+			: m_number(nullptr) { }
+		number(const Storage& num)
+			: m_number(num) { }
+	public:
+		number& operator+(const number& rhs) {
+			m_number += rhs;
+			return *this;
+		}
+	public:
+		bool is_int() noexcept {
+			return std::is_same<Storage, std::int64_t>()
+				|| std::is_same<Storage, std::uint64_t>();
+		}
+		bool is_float() noexcept {
+			return std::is_same<Storage, std::double_t>::value;
+		}
+	private:
+		Storage m_number;
+	}
+	/**
+	 * @class json::value
+	 *
+	 * @extends json::node
+	 * 
+	 * @brief JSON class representing a @code "name": value @endcode pair.
+	 * JSON class representing a @code "name: value" @endcode pair. This class uses templates to take in the desired JSON value to store. The JSON value may be of the following (defined in https://datatracker.ietf.org/doc/html/rfc8259):
+	 * @li @c null (literal)
+	 * @li @c false (literal)
+	 * @li @c true (literal)
+	 * @li JSON object
+	 * @li JSON array
+	 * @li JSON number
+	 * @li JSON string
+	 *
+	 * @tparam JsonType The JSON type (literal or JSON type) to encapsulate.
+	 *
+	 */
 	template<typename JsonType>
-	class value : public node {
+	class value final : public node {
 	public:
 		using value_opt = std::optional<std::unique_ptr<JsonType>>;
 		value() 
@@ -151,13 +253,13 @@ namespace json {
 			return *this;
 		}
 		bool is_null() const noexcept {
-			return m_value.value() == nullptr;
+			return m_value.has_value();
 		}
 		bool is_nan() const noexcept {
-			return std::is_nan(m_value.value().get());
+			return std::isnan(m_value.value().get());
 		}
-		bool is_empty() const noexcept {
-			return m_value.has_value();
+		bool is_finite() const noexcept {
+			return std::isfinite(m_value.value_or(0).get());
 		}
 	public:
 		value_opt m_value{};
@@ -199,7 +301,7 @@ namespace json {
 				enum_types m_runtimeType;
 			};
 		public:
-			array_element() = delete; // Cannot have array elements with absolutely nothing in them (e.g., [, , , ] - what is this???)
+			array_element() = delete; // Cannot have array elements with absolutely nothing in them (e.g., [, , , ])
 			template<typename JsonType>
 			array_element(const JsonType& temp)
 				: m_data(std::make_shared<array_element_model<JsonType>>(temp)) { }
