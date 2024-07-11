@@ -11,10 +11,7 @@ namespace json {
 	class reader {
 	public:
 		reader(const std::string& json)
-			: m_json(json), m_stream(json) {
-			// Remvoes whitespace
-			rmws(m_json);
-		}
+			: m_json(json), m_stream(json) { }
 		reader(const reader& other) = delete;
 		reader(reader&& other) noexcept = default;
 		reader& operator=(const reader& other) = delete;

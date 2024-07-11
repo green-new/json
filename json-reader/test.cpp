@@ -1,11 +1,28 @@
-﻿
+﻿#undef _DLL
 #include <iostream>
 #include <fstream>
+#include <uchar.h>
 #include "json.hpp"
 #include "reader.hpp"
+#include "strmanip.hpp"
+
+std::string build_bad_string() {
+	std::ifstream f;
+	f.open("blns.txt", std::ios_base::binary);
+	std::stringstream b;
+	b << f.rdbuf();
+	return b.str();
+}
+
+int rmws_test() {
+	std::string s = build_bad_string();
+	//json::rmws(s, s.begin(), s.end());
+	std::cout << s << '\n';
+	return 0;
+}
 
 int json_test2() {
-	// Maybe just assume all json strings are utf8 (web standard)
+	// Maybe just assume all json strings are utf8 (web standard) (nvm its cooked)
 	using namespace std::string_literals;
 	std::string json = "{"
 		"\"Hello\": 123,"
@@ -29,7 +46,7 @@ int json_test2() {
 		"\"哈\": \"haha\""
 		"}"s;
 	for (int i = 0; i < json.length(); i++) {
-		std::cout << json[i] << ' ';
+		std::cout << json[i];
 	}
 	std::cout << std::endl;
 	// json::reader reader(json);
@@ -58,6 +75,7 @@ int main(int argc, char** argv) {
 
 	// exit = json_test();
 	exit = json_test2();
+	exit = rmws_test();
 
 	return exit;
 }
