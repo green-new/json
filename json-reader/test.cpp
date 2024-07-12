@@ -22,7 +22,12 @@ int rmws_test() {
 }
 
 int json_test2() {
+<<<<<<< HEAD
 	// Maybe just assume all json strings are utf8 (web standard) (nvm its cooked)
+=======
+	// Maybe just assume all json strings are utf8 (web standard)
+	// Need special characters defined in Unicode
+>>>>>>> d4e0c3282cca4ade32d25950e4a3bb841bd1d9f1
 	using namespace std::string_literals;
 	std::string json = "{"
 		"\"Hello\": 123,"
@@ -57,12 +62,12 @@ int json_test2() {
 int json_test() {
 	using namespace std::string_literals;
 	json::object map{ "parcel" };
-	auto& parcelObj = map.addObject("199.18-3-6");
-	parcelObj.addValue("valuation", 1e6);
-	parcelObj.addValue("bedrooms", "3"s);
-	parcelObj.addValue("address", "4056 state route 19"s);
-	parcelObj.addValue("municipality", "scio"s);
-	auto& arr = parcelObj.addArray("geodata");
+	auto& parcelObj = map.insert_object("199.18-3-6");
+	parcelObj.insert_value("valuation", 1e6);
+	parcelObj.insert_value("bedrooms", "3"s);
+	parcelObj.insert_value("address", "4056 state route 19"s);
+	parcelObj.insert_value("municipality", "scio"s);
+	auto& arr = parcelObj.insert_array("geodata");
 	arr.push("hello"s);
 
 	json::value<json::types::int32>* val = new json::value{ "hello", 10 };
