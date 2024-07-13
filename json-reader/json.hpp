@@ -30,14 +30,19 @@
 namespace json {
 
 	// Forward declarations
-	class node;
-	template<typename JsonType>
 	class value;
+	template<typename Storage>
+	class number;
+	class boolean;
 	class array;
 	class object;
 	
 	/**
+	 * @namespace json::types
+	 *
 	 * @brief Typedefs for JSON types with standard library classes.
+	 *
+	 * @todo Look into possibly removing this namespace.
 	 */
 	namespace types {
 		using string = std::string;
@@ -95,191 +100,216 @@ namespace json {
 	}
 
 	/**
-	 * @class json::node
+	 * @class json::value
 	 *
-	 * @brief Abstract parent class used to represent concrete types.
-	 * Abstract parent class used to polymorphise concrete JSON classes used by this library. Contains the name of the node as a @c std::string .
+	 * @brief Abstract parent class used to represent concrete JSON types (see RFC for this list).
+	 * Abstract parent class used to polymorphise concrete JSON classes used by this library.
 	 * 
 	 */
-	class node {
-	protected:
-		/**
-		 * @brief Default ctor.
-		 * Default ctor. Default initializes @c m_name @c to an empty string.
-		 */
-		node() : m_name({}) { }
-		/**
-		 * @brief Name provided ctor.
-		 * Explicit ctor constructing this node with a provided `name`.
-		 * @param name Name/key of the node
-		 */
-		explicit node(const types::string& name) 
-			: m_name(name) { }
-		/**
-		 * @brief Copy ctor.
-		 */
-		node(const node& other) 
-			: m_name(other.m_name) { }
-		/**
-		 * @brief Move ctor.
-		 */
-		node(node&& other) noexcept {
-			std::swap(m_name, other.m_name);
-		}
-		/**
-		 * @brief Copy assignment.
-		 */
-		node& operator=(const node& other) {
-			*this = node(other);
-			return *this;
-		}
-		/**
-		 * @brief Move assignment.
-		 */
-		node& operator=(node&& other) noexcept {
-			*this = node(other);
-			return *this;
-		}
+	struct value {
+	public:
 		/**
 		 * @brief Trivial virtual destructor.
 		 */
-		virtual ~node() {}
-	public:
-		/**
-		 * @brief The name for this JSON node.
-		 */
-		types::string m_name{};
-	};
-	
-	struct nullable {
-		virtual bool is_null() = 0;
+		virtual ~value() {}
 	};
 	
 	/**
-	 * @brief Typedef pointer for @c node -derived classes
+	 * @brief Typedef pointer for @c value -derived classes
 	 */
-	using node_ptr = std::unique_ptr<node>;
+	using value_ptr = std::unique_ptr<value>;
 	
 	/**
-	 * @todo Class for JSON numbers (handling large values, integers, etc... and how to parse them properly.
+	 * @namespace JSON number storage policies.
+	 *
+	 * @brief Contains integers, unsigned integers, and floating point numbers. All are 64-bit.
+	 *
+	 * @todo Look into mega-huge number storage like with java's BigDecimal.
 	 */
-	namespace number_types {
-		using uint = int64_t;
-	}
-	
 	namespace storage_policy {
 		using integer = std::int64_t;
 		using uinteger = std::uint64_t;
 		using floating = std::double_t;
 	}
 	
+	/**
+	 * @class json::number
+	 * 
+	 * @brief Represents a JSON number. Currently can store a 64-bit signed/unsigned integer, or a 64-bit floating point number.
+	 * Represents a JSON number. Capable of storing a 64-bit signed/unsigned integer or a 64-bit floating point number.
+	 * Cannot be instantiated without a number.
+	 
+	 * @tparam Storage Data type for the number (see namespace @c json::storage_policy for details).
+	 *
+	 * @todo Class for JSON numbers (handling large values, integers, etc... and how to parse them properly.
+	 * @todo Not completed. Needs more operators, and better is_int, is_float checks.
+	 */
 	template<typename Storage = storage_policy::floating>
-	class number final : public nullable {
+	class number final : public value {
+	/**
+	 * Class-specific methods
+	 */
 	public:
+<<<<<<< HEAD
 		number()
 			: m_number(nullptr) {}
 		number(const Storage& num)
 			: m_number(num) {}
+=======
+		/**
+		 * @brief Deleted default ctor.
+		 */
+		number() = delete;
+		/**
+		 * @brief Store a number ctor.
+		 *
+		 * @param num Number to store.
+		 */
+		number(const Storage& num)
+			: m_number(num) { }
+		~number() = default;
+	/**
+	 * Operator overloads
+	 */
+>>>>>>> 6a636ec4b3d6ac7e2966017cca3875db4e15c7f4
 	public:
+		/**
+		 * @todo More operator overloads.
+		 */
 		number& operator+(const number& rhs) {
-			m_number += rhs;
-			return *this;
+			return number(rhs.m_number + m_number);
 		}
 	public:
+		/**
+		 * @todo These functions will need to be changed with static compile-time checks if we implement a BigDecimal-like class to handle gigantic numbers.
+		 */
+		 
+		/**
+		 * @brief Determines if the current number is an integral type.
+		 * This functions returns @c true if this number is storing an integer type, @c false if not.
+		 * This function is marked @c noexcept .
+		 *
+		 * @return Boolean representing if this number is an integer or not.
+		 */
 		bool is_int() noexcept {
 			return std::is_same<Storage, std::int64_t>()
 				|| std::is_same<Storage, std::uint64_t>();
 		}
+		/**
+		 * @brief Determines if the current number is a floating type.
+		 * This functions returns @c true if this number is storing a floating/decimal type, @c false if not.
+		 * This function is marked @c noexcept .
+		 *
+		 * @return Boolean representing if this number is a floating type or not.
+		 */
 		bool is_float() noexcept {
 			return std::is_same<Storage, std::double_t>::value;
 		}
+		/**
+		 * @brief Determines if the current number is finite.
+		 * This functions returns @c true if this number is finite, @c false if infinite.
+		 * This function is marked @c noexcept .
+		 *
+		 * @return Boolean representing if this number is finite or infinite.
+		 */
+		bool is_finite() noexcept {
+			return std::isfinite(m_number);
+		}
+		/**
+		 * @brief Determines if the current number is NaN.
+		 * This functions returns @c true if this number is NaN, @c false if its normal.
+		 * This function is marked @c noexcept .
+		 *
+		 * @return Boolean representing if this number is NaN or normal.
+		 */
+		bool is_nan() noexcept {
+			return std::is_nan(m_number);
+		}
 	private:
+		/**
+		 * The number.
+		 */
 		Storage m_number;
 	};
+<<<<<<< HEAD
+=======
+	
+>>>>>>> 6a636ec4b3d6ac7e2966017cca3875db4e15c7f4
 	/**
-	 * @class json::value
+	 * @class json::boolean
+	 *
+	 * @brief Contains a simple true/false value.
+	 * Contains a true/false value. Cannot be default initialized, thereof, cannot be empty.
+	 */
+	class boolean final : public value {
+	public:
+		boolean() = delete;
+		boolean(bool value)
+			: m_boolean(value) { }
+		~boolean() = default;
+		/**
+		 * @todo Operator overloads that copy boolean operators on m_boolean.
+		 */
+	private:
+		/**
+		 * The boolean. @c true or @c false are the only states for this member.
+		 */
+		bool m_boolean;
+	}
+	
+	/**
+	 * @class json::array
 	 *
 	 * @extends json::node
-	 * 
-	 * @brief JSON class representing a @code "name": value @endcode pair.
-	 * JSON class representing a @code "name: value" @endcode pair. This class uses templates to take in the desired JSON value to store. The JSON value may be of the following (defined in https://datatracker.ietf.org/doc/html/rfc8259):
-	 * @li @c null (literal)
-	 * @li @c false (literal)
-	 * @li @c true (literal)
-	 * @li JSON object
-	 * @li JSON array
-	 * @li JSON number
-	 * @li JSON string
 	 *
-	 * @tparam JsonType The JSON type (literal or JSON type) to encapsulate.
-	 *
+	 * @brief Representation of a JSON array containing type agnostic data.
+	 * Representation of a JSON array containing type agnostic data. Interally uses @c std::vector to store data.
 	 */
-	template<typename JsonType>
-	class value final : public node {
-	public:
-		using value_opt = std::optional<std::unique_ptr<JsonType>>;
-		value() 
-			: node(), m_value() {}
-		explicit value(const JsonType& value) 
-			: node(), m_value(std::make_optional<std::unique_ptr<JsonType>>(std::make_unique<JsonType>(value))) { }
-		explicit value(const char* name, const JsonType& value)
-			: node(types::string(name)), m_value(value) { }
-		explicit value(const types::string& name, const JsonType& value)
-			: node(name), m_value(value) { }
-		value(const value& other)
-			: node(other.m_name) {
-			m_value = other.m_value;
-		}
-		value(value&& other) noexcept {
-			std::swap(this->m_name, other.m_name);
-			std::swap(m_value, other.m_value);
-		}
-		value& operator=(const value& other) {
-			*this = value(other);
-			return *this;
-		}
-		value& operator=(value&& other) noexcept {
-			*this = value(other);
-			return *this;
-		}
-		~value() { }
-	public:
-		value& operator=(const JsonType& temp) {
-			m_value = temp;
-			return *this;
-		}
-		value& operator=(JsonType&& temp) noexcept {
-			m_value = temp;
-			return *this;
-		}
-		bool is_null() const noexcept {
-			return m_value.has_value();
-		}
-		bool is_nan() const noexcept {
-			return std::isnan(m_value.value().get());
-		}
-		bool is_finite() const noexcept {
-			return std::isfinite(m_value.value_or(0).get());
-		}
-	public:
-		value_opt m_value{};
-	};
-
-	// ["a", 1, null, 1.0, {}, []] json object (can contain a variety of json types, which are either values, arrays, or objects)
-	class array : public node {
+	class array final : public value {
 	private:
-		// name-agnostic, type-erased value used by the array class
+		/**
+		 * @class json::array::array_element
+		 *
+		 * @brief Type erased class meant for JSON array elements.
+		 * Type erased class meant for JSON array containers. Uses the concept -> model pattern with templates to hide type T behind @c array_element.
+		 * The default ctor is deleted as empty array elements cannot logically exist.
+		 */
 		class array_element {
 		private:
+			/**
+			 * @class json::array::array_element_concept
+			 *
+			 * @brief Parent class of @c array_element_model in order to group @code array_element_model<T> @endcode 's together.
+			 *
+			 * @todo Stream output friend methods, any other inherited methods that do not contain templates can go here.
+			 */
 			class array_element_concept {
 			public:
 				virtual ~array_element_concept() = default;
 			};
+			/**
+			 * @class json::array::array_element_model
+			 *
+			 * @extends json::array::array_element_concept
+			 *
+			 * @brief Concrete implementation of the array element containing the type.
+			 * Concrete implementation of the array element containing the type. Stores the type erased data on the stack.
+			 *
+			 * @tparam JsonType The type of the data to be stored.
+			 *
+			 * @todo See performance differences between storing on the stack vs on the heap for different use cases. Maybe eventually have the end user decide the best location for it.
+			 */
 			template<typename JsonType>
 			class array_element_model : public array_element_concept {
 			public:
+				/**
+				 * @brief Default ctor.
+				 */
 				array_element_model() 
 					: m_value(), m_runtimeType(getType<JsonType>()) { }
+				/**
+				 * @brief Ctor expecting a lvalue to the array element to create.
+				 */
 				array_element_model(const JsonType& temp)
 					: m_value(temp), m_runtimeType(getType<JsonType>()) { }
 				array_element_model(const array_element_model<JsonType>& other) 
@@ -301,7 +331,15 @@ namespace json {
 				enum_types m_runtimeType;
 			};
 		public:
-			array_element() = delete; // Cannot have array elements with absolutely nothing in them (e.g., [, , , ])
+			/**
+			 * @brief Default ctor deleted.
+			 */
+			array_element() = delete;
+			/**
+			 * @brief Ctor expecting a lvalue to the array element to create.
+			 *
+			 * @tparam The type of the array element.
+			 */
 			template<typename JsonType>
 			array_element(const JsonType& temp)
 				: m_data(std::make_shared<array_element_model<JsonType>>(temp)) { }
@@ -313,19 +351,14 @@ namespace json {
 		using container = std::vector<array_element>;
 		using iterator = typename container::iterator;
 		using const_iterator = typename container::const_iterator;
-		array() 
-			: node() { }
-		explicit array(const types::string& name)
-			: node(name) { }
-		array(const array& other) 
-			: node(other.m_name) {
+		array() { }
+		array(const array& other) {
 			m_arr.clear();
 			for (const auto& elem : other.m_arr) {
 				m_arr.push_back(elem);
 			}
 		}
 		array(array&& other) noexcept {
-			std::swap(this->m_name, other.m_name);
 			std::swap(m_arr, other.m_arr);
 		}
 		array& operator=(array const& other) {
@@ -367,34 +400,39 @@ namespace json {
 		container m_arr{};
 	};
 
-	class object : public node {
+	/**
+	 * @todo Need to update 'has-a' relationships with the deleted `node` class (name member needs to go somewhere)
+	 */
+	class object : public value {
 	public:
-		using prop_map = std::map<std::string, node_ptr>;
+		using value_type = std::unique_ptr<value>
+		using prop_map = std::map<std::string, value_type>;
 		using iterator = prop_map::iterator;
 		using const_iterator = prop_map::const_iterator;
 		object() 
-			: node(), m_props() { }
-		explicit object(const types::string& name)
-			: node(name) { }
-		explicit object(const types::string& name, std::initializer_list<node_ptr> list)
-			: node(name) {
-			for (node_ptr& elem : list) {
-				m_props.insert({elem.name, std::move(elem)});
+			: m_name(), m_props() { }
+		explicit object(const types::string& name) 
+			: m_name(name) { }
+		explicit object(const types::string& name, std::initializer_list<value_type> list) 
+			: m_name(name) {
+			for (auto& elem : list) {
+				m_props.insert({ elem.name, std::move(elem) });
 			}
 		}
 		object(const object& other) 
-			: node(other.m_name) {
+			: m_name(other.name) {
 			// Cannot copy unique ptrs. Must do a deep manual copy
 			m_props.clear();
-			for (const auto& [key, nodePtr] : other.m_props) {
-				if (nodePtr) {
-					m_props.insert({ key, new_node<node>(*nodePtr) });
+			for (const auto& [key, val] : other.m_props) {
+				if (val) {
+					m_props.insert({ key, std::make_unique<value>(*value_type)) });
 				} else {
-					m_props.insert({ key, node_ptr(nullptr) });
+					m_props.insert({ key, nullptr });
 				}
 			}
 		}
 		object(object&& other) noexcept {
+			std::swap(m_name, other.m_name);
 			std::swap(m_props, other.m_props);
 		}
 		object& operator=(const object& other) {
@@ -407,23 +445,13 @@ namespace json {
 		}
 		~object() { }
 	public:
-		template<typename JsonNode = object, typename... CtorArgs>
-		JsonNode& insert(const types::string& name, CtorArgs... ctorArgs)  {
-			m_props.insert({ name, std::make_unique<JsonNode>(name, ctorArgs...) });
-			return (JsonNode&) *m_props[name];
-		}
-		template<typename JsonType>
-		value<JsonType>& insert_value(const types::string& name, const JsonType& temp) {
-			m_props.insert({ name, std::make_unique<value<JsonType>>(name, temp) });
-			return (value<JsonType>&) *m_props[name];
-		}
-		array& insert_array(const types::string& name) {
-			m_props.insert({ name, std::make_unique<array>(name) });
-			return (array&) *m_props[name];
-		}
-		object& insert_object(const types::string& name) {
-			m_props.insert({ name, std::make_unique<object>(name) });
-			return (object&) *m_props[name];
+		template<typename JsonValue = object, typename... CtorArgs>
+		JsonValue& insert(const types::string& name, CtorArgs... ctorArgs)  {
+			m_props.insert({ name, std::make_unique<JsonValue>(name, ctorArgs...) });
+			/**
+			 * @todo Undefined behavior if m_props[name] does not instantiate a JsonValue (could happen due to memory issues).
+			 */
+			return (JsonValue&) *m_props[name];
 		}
 	public:
 		iterator begin() {
@@ -440,5 +468,9 @@ namespace json {
 		}
 	private:
 		prop_map m_props{};
+		/**
+		 * The name of this object. May be absent.
+		 */
+		std::optional<std::string> m_name;
 	};
 }

@@ -22,12 +22,8 @@ int rmws_test() {
 }
 
 int json_test2() {
-<<<<<<< HEAD
 	// Maybe just assume all json strings are utf8 (web standard) (nvm its cooked)
-=======
-	// Maybe just assume all json strings are utf8 (web standard)
 	// Need special characters defined in Unicode
->>>>>>> d4e0c3282cca4ade32d25950e4a3bb841bd1d9f1
 	using namespace std::string_literals;
 	std::string json = "{"
 		"\"Hello\": 123,"
