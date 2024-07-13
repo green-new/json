@@ -177,9 +177,9 @@ namespace json {
 	class number final : public nullable {
 	public:
 		number()
-			: m_number(nullptr) { }
+			: m_number(nullptr) {}
 		number(const Storage& num)
-			: m_number(num) { }
+			: m_number(num) {}
 	public:
 		number& operator+(const number& rhs) {
 			m_number += rhs;
@@ -195,7 +195,7 @@ namespace json {
 		}
 	private:
 		Storage m_number;
-	}
+	};
 	/**
 	 * @class json::value
 	 *
