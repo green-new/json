@@ -7,18 +7,10 @@
 #include "json.hpp"
 
 namespace json {
-
-	class reader {
+	class reader {		
 	public:
 		reader(const std::string& json)
-<<<<<<< HEAD
 			: m_json(json), m_stream(json) { }
-=======
-			: m_json(json), m_stream(json) {
-			// Only remove whitespace outside json content (not in strings)
-			rmws(m_json);
-		}
->>>>>>> d4e0c3282cca4ade32d25950e4a3bb841bd1d9f1
 		reader(const reader& other) = delete;
 		reader(reader&& other) noexcept = default;
 		reader& operator=(const reader& other) = delete;

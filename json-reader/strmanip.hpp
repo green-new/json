@@ -1,60 +1,99 @@
 #pragma once
-#include <vector>
-#include <string>
-#include <algorithm>
-#include <bit>
+#include <cstddef>
 
 namespace json {
-	
-	namespace encodings {
-		using utf8 = uint8_t;
-		using utf16 = uint16_t;
-		using utf32 = uint32_t;
-	}
-	
-	using unicode_codpoint = uint32_t;
 
-<<<<<<< HEAD
-	// Removes whitespace from string
-	static void rmws(std::string& s, const std::string::iterator& begin, const std::string::iterator& end) {
-		s.erase(std::remove_if(begin, end, [](unsigned char c) {
-			return std::isspace(c);
-			}), end);
-=======
-	// Control/basic whitespaces found in human json formatting
-	template<typename Encodings = encodings::utf8>
-	constexpr static std::array<Encodings> wschars = {
-		' ', '\t', '\n', '\r', '\f', '\v'
-	};
-	
-	template<typename T>
-	inline void bit_set(T& number, const size_t n) {
-		number | ((T) 1UL << n);
-	}
-	
-	template<typename T>
-	inline void bit_clear(T& number, const size_t n) {
-		number & ~((T) 1UL << n);
-	}
-	
-	template<typename EncodingType = encodings::utf8>
-	unicode_codpoint decodeUTF8(const EncodingType number) {
-		return (number >> 1UL);
-	}
-	
-	template<typename EncodingType = encodings::utf8>
-	unicode_codpoint decodeUTF8(const EncodingType number1, const EncodingType number2) {
-		return (((number1 >> 3UL) | 0b110) << 8UL) | (((number2 >> 2UL) | 0b10));
-	}
-	
-	template<typename EncodingType = encodings::utf8>
-	unicode_codpoint decodeUTF8(const EncodingType number1, const EncodingType number2, const EncodingType number3) {
-		return (((number1 >> 4UL) | 0b1110) << 16UL) | (((number2 >> 2UL) | 0b10) << 8UL) | (((number3 >> 2UL) | 0b10));
-	}
-	
-	template<typename EncodingType = encodings::utf8>
-	unicode_codpoint decodeUTF8(const EncodingType number1, const EncodingType number2, const EncodingType number3, const EncodingType number4) {
-		return (((number1 >> 5UL) | 0b11110) << 24UL) | (((number2 >> 2UL) | 0b10) << 16UL) | (((number3 >> 2UL) | 0b10) << 8UL) || (((number4 >> 2UL) | 0b10));
->>>>>>> d4e0c3282cca4ade32d25950e4a3bb841bd1d9f1
+	namespace grammar {
+		namespace ws {
+			/**
+			 * @brief ' ' space.
+			 */
+			std::byte space = std::byte{0x20};
+			/**
+			 * @brief '\t' horizontal tab.
+			 */
+			std::byte ht = std::byte{0x09};
+			/**
+			 * @brief '\n' new line.
+			 */
+			std::byte lfnl = std::byte{0x0a};
+			/**
+			 * @brief '\r' carriage return.
+			 */
+			std::byte cr = std::byte{0x0d};
+			
+			/**
+			 * @brief Determines if the provided character @c is a whitespace character.
+			 * 
+			 * @return True if whitespace, false if not.
+			 */
+			bool is_ws(net::byte c) {
+				return c == space || c == ht || c == lfnl || c == cr;
+			}
+		}
+		enum class control : std::byte {
+			/**
+			 * @brief '[' left square bracket.
+			 */
+			begin_array = std::byte{0x5b},
+			/**
+			 * @brief '{' left curly bracket.
+			 */
+			begin_object = std::byte{0x7b},
+			/**
+			 * @brief ']' right square bracket.
+			 */
+			end_array = std::byte{0x5d},
+			/**
+			 * @brief '}' right curly bracket.
+			 */
+			end_object = std::byte{0x7d},
+			/**
+			 * @brief ':' colon.
+			 */
+			name_separator = std::byte{0x3a},
+			/**
+			 * @brief ',' comma.
+			 */
+			value_separator = std::byte{0x2c}
+		};
+		enum class parsing : std::byte {
+			/**
+			 * @brief '\"' double quotation mark.
+			 */
+			quotation_mark = std::byte{0x22},
+			/**
+			 * @brief '\' backslash (escape) (must be escaped or is the character escaping the subsequent character).
+			 */
+			escape = std::byte{0x5c},
+			/**
+			 * @brief '/' forward slash (must be escaped, not a control character by itself).
+			 */
+			forward_slash = std::byte{0x2f},
+			/**
+			 * @brief 'b' backspace (must be escaped, not a control character by itself).
+			 */
+			backspace = std::byte{0x62},
+			/**
+			 * @brief 'f' form feed (must be escaped, not a control character by itself).
+			 */
+			form_feed = std::byte{0x66},
+			/**
+			 * @brief 'n' line feed (must be escaped, not a control character by itself).
+			 */
+			line_feed = std::byte{0x6e},
+			/**
+			 * @brief 'r' carriage return (must be escaped, not a control character by itself).
+			 */
+			carriage_return = std::byte{0x72},
+			/**
+			 * @brief 't' tab (must be escaped, not a control character by itself).
+			 */
+			tab = std::byte{0x74},
+			/**
+			 * @brief 'u' starts a unicode sequence (must be escaped, not a control character by itself).
+			 */
+			unicode = std::byte{0x75}
+		};
 	}
 }

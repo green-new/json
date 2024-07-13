@@ -30,14 +30,19 @@
 namespace json {
 
 	// Forward declarations
-	class node;
-	template<typename JsonType>
 	class value;
+	template<typename Storage>
+	class number;
+	class boolean;
 	class array;
 	class object;
 	
 	/**
+	 * @namespace json::types
+	 *
 	 * @brief Typedefs for JSON types with standard library classes.
+	 *
+	 * @todo Look into possibly removing this namespace.
 	 */
 	namespace types {
 		using string = std::string;
@@ -97,7 +102,7 @@ namespace json {
 	/**
 	 * @class json::value
 	 *
-	 * @brief Abstract parent class used to represent concrete types.
+	 * @brief Abstract parent class used to represent concrete JSON types (see RFC for this list).
 	 * Abstract parent class used to polymorphise concrete JSON classes used by this library.
 	 * 
 	 */
@@ -128,39 +133,95 @@ namespace json {
 	}
 	
 	/**
+	 * @class json::number
+	 * 
+	 * @brief Represents a JSON number. Currently can store a 64-bit signed/unsigned integer, or a 64-bit floating point number.
+	 * Represents a JSON number. Capable of storing a 64-bit signed/unsigned integer or a 64-bit floating point number.
+	 * Cannot be instantiated without a number.
+	 
+	 * @tparam Storage Data type for the number (see namespace @c json::storage_policy for details).
+	 *
 	 * @todo Class for JSON numbers (handling large values, integers, etc... and how to parse them properly.
 	 * @todo Not completed. Needs more operators, and better is_int, is_float checks.
 	 */
 	template<typename Storage = storage_policy::floating>
 	class number final : public value {
+	/**
+	 * Class-specific methods
+	 */
 	public:
+		/**
+		 * @brief Deleted default ctor.
+		 */
 		number() = delete;
+		/**
+		 * @brief Store a number ctor.
+		 *
+		 * @param num Number to store.
+		 */
 		number(const Storage& num)
 			: m_number(num) { }
 		~number() = default;
+	/**
+	 * Operator overloads
+	 */
 	public:
+		/**
+		 * @todo More operator overloads.
+		 */
 		number& operator+(const number& rhs) {
-			m_number += rhs;
-			return *this;
+			return number(rhs.m_number + m_number);
 		}
 	public:
 		/**
 		 * @todo These functions will need to be changed with static compile-time checks if we implement a BigDecimal-like class to handle gigantic numbers.
 		 */
+		 
+		/**
+		 * @brief Determines if the current number is an integral type.
+		 * This functions returns @c true if this number is storing an integer type, @c false if not.
+		 * This function is marked @c noexcept .
+		 *
+		 * @return Boolean representing if this number is an integer or not.
+		 */
 		bool is_int() noexcept {
 			return std::is_same<Storage, std::int64_t>()
 				|| std::is_same<Storage, std::uint64_t>();
 		}
+		/**
+		 * @brief Determines if the current number is a floating type.
+		 * This functions returns @c true if this number is storing a floating/decimal type, @c false if not.
+		 * This function is marked @c noexcept .
+		 *
+		 * @return Boolean representing if this number is a floating type or not.
+		 */
 		bool is_float() noexcept {
 			return std::is_same<Storage, std::double_t>::value;
 		}
+		/**
+		 * @brief Determines if the current number is finite.
+		 * This functions returns @c true if this number is finite, @c false if infinite.
+		 * This function is marked @c noexcept .
+		 *
+		 * @return Boolean representing if this number is finite or infinite.
+		 */
 		bool is_finite() noexcept {
 			return std::isfinite(m_number);
 		}
+		/**
+		 * @brief Determines if the current number is NaN.
+		 * This functions returns @c true if this number is NaN, @c false if its normal.
+		 * This function is marked @c noexcept .
+		 *
+		 * @return Boolean representing if this number is NaN or normal.
+		 */
 		bool is_nan() noexcept {
 			return std::is_nan(m_number);
 		}
 	private:
+		/**
+		 * The number.
+		 */
 		Storage m_number;
 	};
 	
@@ -168,6 +229,7 @@ namespace json {
 	 * @class json::boolean
 	 *
 	 * @brief Contains a simple true/false value.
+	 * Contains a true/false value. Cannot be default initialized, thereof, cannot be empty.
 	 */
 	class boolean final : public value {
 	public:
@@ -176,9 +238,12 @@ namespace json {
 			: m_boolean(value) { }
 		~boolean() = default;
 		/**
-		 * Operator overloads that copy boolean operators on m_boolean.
+		 * @todo Operator overloads that copy boolean operators on m_boolean.
 		 */
 	private:
+		/**
+		 * The boolean. @c true or @c false are the only states for this member.
+		 */
 		bool m_boolean;
 	}
 	
@@ -233,7 +298,7 @@ namespace json {
 				array_element_model() 
 					: m_value(), m_runtimeType(getType<JsonType>()) { }
 				/**
-				 * @brief Default ctor.
+				 * @brief Ctor expecting a lvalue to the array element to create.
 				 */
 				array_element_model(const JsonType& temp)
 					: m_value(temp), m_runtimeType(getType<JsonType>()) { }
@@ -256,7 +321,15 @@ namespace json {
 				enum_types m_runtimeType;
 			};
 		public:
-			array_element() = delete; // Cannot have array elements with absolutely nothing in them (e.g., [, , , ])
+			/**
+			 * @brief Default ctor deleted.
+			 */
+			array_element() = delete;
+			/**
+			 * @brief Ctor expecting a lvalue to the array element to create.
+			 *
+			 * @tparam The type of the array element.
+			 */
 			template<typename JsonType>
 			array_element(const JsonType& temp)
 				: m_data(std::make_shared<array_element_model<JsonType>>(temp)) { }
@@ -366,7 +439,7 @@ namespace json {
 		JsonValue& insert(const types::string& name, CtorArgs... ctorArgs)  {
 			m_props.insert({ name, std::make_unique<JsonValue>(name, ctorArgs...) });
 			/**
-			 * @todo Undefined behavior if m_props[name] does not instantiate a JsonValue
+			 * @todo Undefined behavior if m_props[name] does not instantiate a JsonValue (could happen due to memory issues).
 			 */
 			return (JsonValue&) *m_props[name];
 		}
@@ -385,6 +458,9 @@ namespace json {
 		}
 	private:
 		prop_map m_props{};
-		std::string m_name{};
+		/**
+		 * The name of this object. May be absent.
+		 */
+		std::optional<std::string> m_name;
 	};
 }
