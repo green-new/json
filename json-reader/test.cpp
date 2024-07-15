@@ -1,5 +1,4 @@
-﻿#undef _DLL
-#include <iostream>
+﻿#include <iostream>
 #include <fstream>
 #include <uchar.h>
 #include "json.hpp"
@@ -57,16 +56,18 @@ int json_test2() {
 
 int json_test() {
 	using namespace std::string_literals;
-	json::object map{ "parcel" };
-	auto& parcelObj = map.insert_object("199.18-3-6");
-	parcelObj.insert_value("valuation", 1e6);
-	parcelObj.insert_value("bedrooms", "3"s);
-	parcelObj.insert_value("address", "4056 state route 19"s);
-	parcelObj.insert_value("municipality", "scio"s);
-	auto& arr = parcelObj.insert_array("geodata");
-	arr.push("hello"s);
+	json::object map("parcel");
+	auto& parcelObj = map.insert<json::object>("199.18-3-6");
+	parcelObj.insert<json::number<json::storage_policy::integer>>("valuation", 1e6);
+	parcelObj.insert<json::string>("bedrooms", "3"s);
+	parcelObj.insert<json::string>("address", "my address"s);
+	parcelObj.insert<json::string>("municipality", "my town"s);
+	auto& bool1 = parcelObj.insert<json::boolean>("paid", false);
+	bool1 = true;
+	auto& arr = parcelObj.insert<json::array>("geodata");
+	arr.push<json::string>("hello"s);
 
-	json::value<json::types::int32>* val = new json::value{ "hello", 10 };
+	std::cout << map;
 
 	return 0;
 }
@@ -74,9 +75,9 @@ int json_test() {
 int main(int argc, char** argv) {
 	int exit = 0;
 
-	// exit = json_test();
-	exit = json_test2();
-	exit = rmws_test();
+	exit = json_test();
+	// exit = json_test2();
+	// exit = rmws_test();
 
 	return exit;
 }
