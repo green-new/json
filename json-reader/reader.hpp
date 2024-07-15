@@ -7,7 +7,7 @@
 #include "json.hpp"
 
 namespace json {
-	class reader {		
+	class reader {
 	public:
 		reader(const std::string& json)
 			: m_json(json) { }

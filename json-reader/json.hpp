@@ -342,7 +342,7 @@ namespace json {
 		/*
 		* @copydoc value::clone_impl
 		*/
-		virtual boolean* clone_impl() const override {
+		boolean* clone_impl() const override {
 			return new boolean(*this);
 		}
 	private:
@@ -639,13 +639,11 @@ namespace json {
 	 * @extends json::value
 	 * 
 	 * @brief Represents a JSON object.
-	 * Represents a JSON object. Contains a map of ["name", value] pairs. Keeps track of the names of JSON values.
+	 * Contains a map of ["name", value] pairs. Keeps track of the names of JSON values.
 	 * A ["name", value] pair CANNOT have an empty or null name. A value may be null which is internally represented as 'nullptr'.
 	 * Duplicate named members follow the same rules as the standard library's @c std::map::insert.
-	 * 
-	 * @todo Need to update 'has-a' relationships with the deleted `node` class (name member needs to go somewhere)
 	 */
-	class object : public value {
+	class object final : public value {
 	/*
 	* Class methods.
 	*/
@@ -759,9 +757,6 @@ namespace json {
 			 */
 			return (JsonValue&) *m_props[name];
 		}
-		void merge(object& other) {
-
-		}
 	/*
 	* Iterators.
 	*/
@@ -819,7 +814,7 @@ namespace json {
 			ss << '}';
 			return ss.str();
 		}
-		/*
+		/**
 		* @copydoc json::value::clone_impl
 		*/
 		virtual object* clone_impl() const override {
@@ -829,14 +824,14 @@ namespace json {
 	 * Members.
 	 */
 	private:
-		/*
+		/**
 		* The object property (member) map.
 		*/
 		prop_map m_props{};
 		/**
-		 * The name of this object. May be absent (in cases *this is a root object).
+		 * The name of this object. 
 		 */
-		std::optional<std::string> m_name;
+		std::string m_name;
 	};
 
 	/**
@@ -873,14 +868,156 @@ namespace json {
 			}
 			return *this;
 		}
+		~root() = default;
+	/**
+	* Access.
+	* @todo Thread-safe access in the future?
+	*/
+	public:
+		object& root() {
+			return m_root;
+		}
 	/**
 	* Override methods.
 	*/
 	public:
-		std::string to_string() const {
+		std::string to_string() const override {
 			return std::format("{{0}}", m_root.to_string());
+		}
+		root* clone_impl() const override {
+			return new root(*this);
 		}
 	private:
 		object m_root;
+	};
+	
+	/**
+	* @todo Abstract builder class. To be renamed.
+	*/
+	template<typename T>
+	class builder final {
+	public: 
+		virtual builder() = default;
+	public:
+		virtual T&& build() noexcept {
+			// Queue the parent that we were built and for deletion
+			m_parent.on_delete(*this);
+			return std::move(m_object.get());
+		}
+	public:
+		std::unique_ptr<T> m_object;
+		builder& m_parent;
+	};
+	
+	/**
+	* @class json::array_builder
+	* 
+	* @brief Builder pattern for JSON arrays.
+	*/
+	class array_builder final : public builder<array> {
+	public:
+		array_builder(const builder& parent)
+			: this->m_object(std::make_unique<array>()), this->m_parent(parent) { }
+		~array_builder() = default;
+	public:
+		template<typename JsonType>
+		void push(const JsonType& temp) {
+			m_object.push(temp);
+		}
+	};
+	
+	/**
+	* @class json::obj_builder
+	*
+	* @brief Builder pattern for JSON objects.
+	*/
+	class obj_builder final : public builder<object> {
+	public:
+		obj_builder(const builder& parent, const std::string& name)
+			: this->m_object(std::make_unique<object>(name)), this->m_parent(parent) { }
+		~obj_builder() = default;
+	public:
+		template<typename JsonType, typename... CtorArgs>
+		obj_builder& insert(const std::string& name, CtorArgs... ctorArgs)  {
+			m_object.insert<JsonType>(name, ctorArgs...);
+			return *this;
+		}
+	};
+	
+	/**
+	* @class json::root_builder
+	* 
+	* @extends json::builder
+	*
+	* @brief Builds a json root object.
+	*/
+	class root_builder final : public builder<root> {
+	/**
+	* Class methods.
+	*/	
+	public:
+		root_builder()
+			// Does the root builder need to be a parent of itself, if we use the builder2 class?
+			: this->m_object(std::make_unique<root>()),	this->m_parent(*this) { }
+		~root_builder() = default;
+	/**
+	* Modifiers.
+	*/
+	public:
+		obj_builder& insert(const std::string& name)  {
+			m_obj_builders.insert({name, obj_builder(*this, name)});
+			return m_obj_builders.at(name);
+		}
+		template<typename JsonType, typename... CtorArgs>
+		root_builder& insert(const std::string& name, CtorArgs... ctorArgs) {
+			m_object.insert<JsonType>(name, ctorArgs...);
+			return *this;
+		}
+	};
+	
+	/**
+	* @todo True builder. Needs rename.
+	*/
+	class builder2 final : public builder<root> {
+	using builder_ptr = std::unique_ptr<builder>;
+	public:
+		builder2()
+			: m_builders() {
+			m_builders.push(std::make_unique<root_builder>()) { }
+		}
+		~builder2() = default;
+	public:
+		obj_builder& insert_object(const std::string& name) {
+			m_builders.push(std::make_unique<obj_builder>(*m_builders.top(), name));
+			return *m_builders.top();
+		}
+		array_builder& insert_array() {
+			
+		}
+		builder2& insert_number() {
+			
+		}
+		builder2& insert_boolean() {
+		
+		}
+		builder2& insert_string() {
+			
+		}
+	/**
+	* Overrides.
+	*/
+	public:
+		virtual root&& build() override {
+			while (!m_builders.empty()) {
+				auto& top = m_builders.top();
+				top.build();
+				top.release();
+				m_builders.pop();
+			}
+			return std::move(this->m_object.get());
+		}
+	private:
+		root_bu
+		std::stack<builder_ptr> m_builders{};
 	};
 }

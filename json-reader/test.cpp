@@ -56,18 +56,23 @@ int json_test2() {
 
 int json_test() {
 	using namespace std::string_literals;
-	json::object map("parcel");
-	auto& parcelObj = map.insert<json::object>("199.18-3-6");
-	parcelObj.insert<json::number<json::storage_policy::integer>>("valuation", 1e6);
-	parcelObj.insert<json::string>("bedrooms", "3"s);
-	parcelObj.insert<json::string>("address", "my address"s);
-	parcelObj.insert<json::string>("municipality", "my town"s);
-	auto& bool1 = parcelObj.insert<json::boolean>("paid", false);
-	bool1 = true;
-	auto& arr = parcelObj.insert<json::array>("geodata");
-	arr.push<json::string>("hello"s);
+	json::root_builder b{};
+	
+	json::root obj = 
+		b.insert("parcel")
+			.insert<json::object>("199.8-3-6")
+				.insert<json::number<json::storage_policy::uinteger>>("valuation", 1e6)
+				.insert<json::boolean>("paid_taxes", false)
+				.insert<json::string>("owner", "me")
+				.insert<json::array>("geodata")
+					.insert<json::number<json::storage_policy::floating>>(42.06f)
+					.insert<json::boolean>(false),
+					.insert<json::nothing>()
+					.build()
+				.build()
+			.build();
 
-	std::cout << map;
+	std::cout << obj;
 
 	return 0;
 }
