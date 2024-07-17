@@ -132,6 +132,7 @@
     <ClCompile Include="test.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="builder.hpp" />
     <ClInclude Include="json.hpp" />
     <ClInclude Include="strmanip.hpp" />
   </ItemGroup>

@@ -26,6 +26,9 @@
     <ClInclude Include="strmanip.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="builder.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="example.json" />
