@@ -20,8 +20,18 @@
 #include <optional>
 #include <stdexcept>
 #include <format>
+#include <functional>
 
 #pragma once
+
+/**
+* List of todos.
+* @todo Implementation file for all implementations.
+* @todo Header file for builders, iterable, etc..
+* @todo Doxygen header comment for every header/implementation file.
+* @todo Forward declare all objects.
+* @todo Operater overloads for json::number.
+*/
 
 /**
  * @brief JSON namespace that holds everything.
@@ -35,6 +45,73 @@ namespace json {
 	class boolean;
 	class array;
 	class object;
+	
+	/**
+	* @brief Iterable interface. Should be its own header file.
+	*/
+	template<class Container, class Type>
+	struct iterable {
+		/**
+		* @brief Type alias to the array's iterator.
+		*/
+		using iterator = typename Container::iterator;
+		/**
+		* @brief Type alias to the array's const iterator.
+		*/
+		using const_iterator = typename Container::const_iterator;
+		/**
+		* @brief Type alias to the array's reverse iterator.
+		*/
+		using reverse_iterator = typename Container::reverse_iterator;
+		/**
+		* @brief Type alias to the array's const reverse iterator.
+		*/
+		using const_reverse_iterator = typename Container::const_reverse_iterator;
+		/**
+		* @brief Begin iterator.
+		*/
+		virtual iterator begin() noexcept = 0;
+		/**
+		* @brief End iterator.
+		*/
+		virtual iterator end() noexcept = 0;
+		/**
+		* @brief Reverse begin iterator.
+		*/
+		virtual reverse_iterator rbegin() noexcept = 0;
+		/**
+		* @brief Reverse end iterator.
+		*/
+		virtual reverse_iterator rend() noexcept = 0;
+		/**
+		* @brief Begin const iterator.
+		*/
+		virtual const_iterator cbegin() const noexcept = 0;
+		/**
+		* @brief End const iterator.
+		*/
+		virtual const_iterator cend() const noexcept = 0;
+		/**
+		* @brief Begin const reverse iterator.
+		*/
+		virtual const_reverse_iterator crbegin() const noexcept = 0;
+		/**
+		* @brief End const reverse iterator.
+		*/
+		virtual const_reverse_iterator crend() const noexcept = 0;
+		/**
+		* @brief Calls a user-provided callback that iterates through each element as a const reference in the collection.
+		*/
+		virtual void for_each(std::function<void, (const Type& element)> functor) const = 0;
+		/**
+		* @brief Calls a user-provided callback that iterates through each element as a mutable reference in the collection.
+		*/
+		virtual void for_each(std::function<void(Type& element)> functor) = 0;
+		/**
+		* @brief Moves each element out of the collection into user ownership.
+		*/
+		virtual void consume(std::function<void(Type&&)> functor) = 0; 
+	}
 
 	/**
 	 * @class json::value
@@ -357,31 +434,12 @@ namespace json {
 	* @brief Representation of a JSON array containing type agnostic data.
 	* Representation of a JSON array containing type agnostic data. Interally uses @c std::vector to store data.
 	*/
-	class array final : public value {
+	class array final : public value, public iterable<array::container, array::container::value_type::element_type> {
+		using container = std::vector<value_ptr>;
 	/*
 	* Class methods.
 	*/
 	public:
-		/*
-		* @brief Type alias to the array.
-		*/
-		using container = std::vector<value_ptr>;
-		/*
-		* @brief Type alias to the array's iterator.
-		*/
-		using iterator = typename container::iterator;
-		/*
-		* @brief Type alias to the array's const iterator.
-		*/
-		using const_iterator = typename container::const_iterator;
-		/*
-		* @brief Type alias to the array's reverse iterator.
-		*/
-		using reverse_iterator = typename container::reverse_iterator;
-		/*
-		* @brief Type alias to the array's const reverse iterator.
-		*/
-		using const_reverse_iterator = typename container::const_reverse_iterator;
 		/*
 		* @brief Default ctor. Default initializes the internal array.
 		*/
@@ -469,8 +527,9 @@ namespace json {
 		* @param temp The object being pushed.
 		*/
 		template<typename JsonType>
-		void push(const JsonType& temp) {
+		JsonType& push(const JsonType& temp) {
 			m_arr.push_back(std::make_unique<JsonType>(temp));
+			return *m_arr.back();
 		}
 		/*
 		* @brief Removes the last element from the array.
@@ -564,38 +623,6 @@ namespace json {
 			return m_arr.empty();
 		}
 	/*
-	* Iterators.
-	*/
-	public:
-		/*
-		* @brief Begin iterator.
-		* This function is marked noexcept.
-		*/
-		iterator begin() noexcept {
-			return m_arr.begin();
-		}
-		/*
-		* @brief End iterator.
-		* This function is marked noexcept.
-		*/
-		iterator end() noexcept {
-			return m_arr.end();
-		}
-		/*
-		* @brief Begin const iterator.
-		* This function is marked noexcept.
-		*/
-		const_iterator begin() const noexcept {
-			return m_arr.begin();
-		}
-		/*
-		* @brief End const iterator.
-		* This function is marked noexcept.
-		*/
-		const_iterator end() const noexcept {
-			return m_arr.end();
-		}
-	/*
 	* Overrides.
 	*/
 	public:
@@ -623,6 +650,80 @@ namespace json {
 		virtual array* clone_impl() const override {
 			return new array(*this);
 		}
+		/**
+		* @brief Begin iterator.
+		*/
+		virtual iterator begin() noexcept override {
+			return m_arr.begin();
+		}
+		/**
+		* @brief End iterator.
+		*/
+		virtual iterator end() noexcept {
+			return m_arr.end();
+		}
+		/**
+		* @brief Reverse begin iterator.
+		*/
+		virtual reverse_iterator rbegin() noexcept {
+			return m_arr.rbegin();
+		}
+		/**
+		* @brief Reverse end iterator.
+		*/
+		virtual reverse_iterator rend() noexcept {
+			return m_arr.rend();
+		}
+		/**
+		* @brief Begin const iterator.
+		*/
+		virtual const_iterator cbegin() const noexcept {
+			return m_arr.cbegin();
+		}
+		/**
+		* @brief End const iterator.
+		*/
+		virtual const_iterator cend() const noexcept {
+			return m_arr.cend();
+		}
+		/**
+		* @brief Begin const reverse iterator.
+		*/
+		virtual const_reverse_iterator crbegin() const noexcept {
+			return m_arr.crbegin();
+		}
+		/**
+		* @brief End const reverse iterator.
+		*/
+		virtual const_reverse_iterator crend() const noexcept {
+			return m_arr.crend();
+		}
+		/**
+		* @brief Calls a user-provided callback that iterates through each element as a const reference in the collection.
+		*/
+		virtual void for_each(std::function<void(const Type& element)> functor) const {
+			for (const auto& element : m_arr) {
+				functor(*element);
+			}
+		}
+		/**
+		* @brief Calls a user-provided callback that iterates through each element as a mutable reference in the collection.
+		*/
+		virtual void for_each(std::function<void(Type& element)> functor) {
+			for (auto& element : m_arr) {
+				functor(*m_arr);
+			}
+		}
+		/**
+		* @brief Moves each element out of the collection into user ownership.
+		*/
+		virtual void consume(std::function<void(Type&&)> functor) {
+			for (auto& element : m_arr) {
+				functor(std::move(*element));
+				element.release();
+			}
+			m_arr.clear();
+		}
 	/**
 	 * Members.
 	 */
@@ -643,27 +744,16 @@ namespace json {
 	 * A ["name", value] pair CANNOT have an empty or null name. A value may be null which is internally represented as 'nullptr'.
 	 * Duplicate named members follow the same rules as the standard library's @c std::map::insert.
 	 */
-	class object final : public value {
+	class object final : public value, 
+		public iterable<object::prop_map, object::prop_map::mapped_type::element_type> {
 	/*
 	* Class methods.
 	*/
 	public:
 		/*
-		* @brief Type alias for uncopyable JSON values.
-		*/
-		using value_type = std::unique_ptr<value>;
-		/*
 		* @brief Type alias for the JSON object property map.
 		*/
-		using prop_map = std::map<std::string, value_type>;
-		/*
-		* @brief Type alias for the map iterator.
-		*/
-		using iterator = prop_map::iterator;
-		/*
-		* @brief Type alias for the const map iterator.
-		*/
-		using const_iterator = prop_map::const_iterator;
+		using prop_map = std::map<std::string, value_ptr>;
 		/*
 		* @brief Default ctor.
 		*/
@@ -755,35 +845,7 @@ namespace json {
 			/**
 			 * @todo Undefined behavior if m_props[name] does not instantiate a JsonValue (could happen due to memory issues).
 			 */
-			return (JsonValue&) *m_props[name];
-		}
-	/*
-	* Iterators.
-	*/
-	public:
-		/*
-		* @brief Begin iterator.
-		*/
-		iterator begin() {
-			return m_props.begin();
-		}
-		/*
-		* @brief End iterator.
-		*/
-		iterator end() {
-			return m_props.end();
-		}
-		/*
-		* @brief Begin const iterator.
-		*/
-		const_iterator begin() const {
-			return m_props.begin();
-		}
-		/*
-		* @brief End const iterator.
-		*/
-		const_iterator end() const {
-			return m_props.end();
+			return (JsonValue&) *m_props.at(name);
 		}
 	/*
 	* Overrides.
@@ -797,11 +859,9 @@ namespace json {
 			if (m_name.has_value()) {
 				ss << '\"' << m_name.value() << "\":";
 			}
-			ss << "{";
-			const char* padding = "";
-			for (auto it = m_props.begin(); it != m_props.end(); it++) {
-				const prop_map::key_type& key = it->first;
-				const prop_map::mapped_type& val = it->second;
+			ss << '{';
+			std::string padding = "";
+			for (const auto& [key, val] : m_props) {
 				ss << padding;
 				ss << '\"' << key << "\":";
 				if (val) {
@@ -842,17 +902,46 @@ namespace json {
 	* @brief The json root class.
 	* Contains everything.
 	*/
-	class root final : public value {
+	class root final : public value, 
+		public iterable<root::prop_map, root::value_type> {
+	/**
+	* Type aliases.
+	*/
+	public:
+		/**
+		* @brief Type alias for uncopyable JSON values.
+		*/
+		using value_type = std::unique_ptr<value>;
+		/**
+		* @brief Type alias for the JSON object property map.
+		*/
+		using prop_map = std::map<std::string, value_type>;
+		/**
+		* @brief Type alias for the map iterator.
+		*/
+		using iterator = prop_map::iterator;
+		/**
+		* @brief Type alias for the const map iterator.
+		*/
+		using const_iterator = prop_map::const_iterator;
 	/**
 	* Class methods.
 	*/
 	public:
 		root()
 			: m_root() { }
-		root(const std::string& name)
-			: m_root(name) { }
-		root(const root& other) 
-			: m_root(other.m_root) { }
+		root(const root& other) {
+			// Cannot copy unique ptrs. Must do a deep manual copy
+			m_props.clear();
+			for (const auto& [key, val] : other.m_props) {
+				if (val) {
+					// Copy ctor called
+					m_props.insert({ key, val->clone()});
+				} else {
+					m_props.insert({ key, nullptr });
+				}
+			}
+		}
 		root(root&& other) noexcept {
 			std::swap(m_root, other.m_root);
 		}
@@ -870,24 +959,53 @@ namespace json {
 		}
 		~root() = default;
 	/**
-	* Access.
-	* @todo Thread-safe access in the future?
+	* Modifiers.
 	*/
 	public:
-		object& get_root() {
-			return m_root;
+		/**
+		* @brief Inserts a new JSON value based on the provided template and ctor arguments.
+		* 
+		* @tparam JsonValue The type of the JSON value to insert.
+		* @tparam CtorArgs The arguments to the JsonValue ctor.
+		* 
+		* @param name The name of this value.
+		* @param ctorArgs The ctor args of JsonType.
+		* 
+		* @returns Lvalue reference to the newly created object member.
+		*/
+		template<typename JsonValue = object, typename... CtorArgs>
+		JsonValue& insert(const std::string& name, CtorArgs... ctorArgs)  {
+			m_props.insert({ name, std::make_unique<JsonValue>(ctorArgs...) });
+			/**
+			 * @todo Undefined behavior if m_props[name] does not instantiate a JsonValue (could happen due to memory issues).
+			 */
+			return (JsonValue&) *m_props.at(name);
 		}
 	/**
 	* Override methods.
 	*/
 	public:
 		std::string to_string() const override {
-			return std::format("{{0}}", m_root.to_string());
+			std::ostringstream ss;
+			ss << '{';
+			std::string padding = "";
+			for (const auto& [key, val] : m_root) {
+				ss << padding;
+				ss << '\"' << key << "\":";
+				if (val) {
+					ss << *val;
+				} else {
+					ss << "null";
+				}
+				padding = ",";
+			}
+			ss << '}';
+			return ss.str();
 		}
 		root* clone_impl() const override {
 			return new root(*this);
 		}
 	private:
-		object m_root;
+		prop_map m_root;
 	};
 }
