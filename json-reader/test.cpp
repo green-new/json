@@ -83,6 +83,20 @@ int json_test() {
 			.build()
 		// Finish building the root node
 		.complete();
+		
+	json::root_builder b{};
+	json::root r = 
+	b.object("parcel")
+		.array("people")
+			.number<json::storage_policy::floating>(43.54f)
+			.null()
+			.string("Hello\n")
+			.finish();
+		.number<json::storage_policy:uinteger>("valuation", 65)
+		.string("apple", "orange")
+		.finish()
+	.finish();
+					
 
 	std::cout << obj;
 
