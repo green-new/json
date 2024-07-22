@@ -12,20 +12,20 @@ namespace json {
 	template<typename T, typename Escape>
 	class builder {
 	protected:
-		builer(T& obj, const Escape& esc) 
+		builer(T& obj, Escape& esc) 
 			: m_object(obj), m_escape(esc) { }
 		template<typename... CtorArgs>
-		builder(const Escape& esc, CtorArgs&& ...args)
+		builder(Escape& esc, CtorArgs&& ...args)
 			: m_object(T(std::forward(args)...)), m_escape(esc) { }
 		virtual builder() = default;
 	public:
 		/** @todo Something like json::value::clone() here for number, boolean, string, null */
-		virtual Escape& finish() noexcept {
+		virtual Escape finish() noexcept {
 			return m_escape;
 		}
 	public:
 		T& m_object;
-		Escape& m_escape;
+		Escape m_escape;
 	};
 
 	/**
@@ -34,10 +34,10 @@ namespace json {
 	* @brief Builder pattern for JSON arrays.
 	*/
 	template<typename Escape>
-	class array_builder final : public builder<array, Escape&> {
+	class array_builder final : public builder<array, Escape> {
 	public:
-		array_builder(const Escape& Escape)
-			: builder<array, Escape>(Escape) {}
+		array_builder(const Escape& esc)
+			: builder<array, Escape>(esc) {}
 		~array_builder() = default;
 	public:
 		template<typename... CtorArgs>
@@ -74,10 +74,10 @@ namespace json {
 	* @brief Builder pattern for JSON objects.
 	*/
 	template<typename Escape>
-	class obj_builder final : public builder<object, Escape&> {
+	class obj_builder final : public builder<object, Escape> {
 	public:
-		obj_builder(const Escape& Escape, const std::string& name)
-			: builder<object, Escape&>(Escape) {}
+		obj_builder(const Escape& esc, const std::string& name)
+			: builder<object, Escape&>(esc) {}
 		~obj_builder() = default;
 	public:
 		template<typename... CtorArgs>
@@ -121,7 +121,7 @@ namespace json {
 	*/
 	public:
 		root_builder()
-			: builder<root, root&&>(m_object) { }
+			: builder<root, root&&>(root{}, this->m_object) { }
 		~root_builder() = default;
 		/**
 		* Modifiers.
@@ -129,11 +129,11 @@ namespace json {
 	public:
 		template<typename... CtorArgs>
 		obj_builder object(const std::string& name, CtorArgs&&... args) { // Cannot return by reference or else we get a dangling reference
-			return obj_builder<array_builder>(*this, this->m_object->insert<object>(name, std::forward(args)...));
+			return obj_builder<root_builder&>(*this, this->m_object->insert<object>(name, std::forward(args)...));
 		}
 		template<typename... CtorArgs>
 		array_builder array(const std::string& name, CtorArgs&&... args) { // Cannot return by reference or else we get a dangling reference
-			return array_builder<array_builder>(*this, this->m_object->insert<array>(name, std::forward(args)...));
+			return array_builder<root_builder&>(*this, this->m_object->insert<array>(name, std::forward(args)...));
 		}
 		template<typename Storage>
 		root_builder& number(const std::string& name, Storage number) {
