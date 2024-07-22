@@ -21,6 +21,7 @@
 #include <stdexcept>
 #include <format>
 #include <functional>
+#include <utility>
 
 #pragma once
 
@@ -110,8 +111,8 @@ namespace json {
 		/**
 		* @brief Moves each element out of the collection into user ownership.
 		*/
-		virtual void consume(std::function<void(Type&&)> functor) = 0; 
-	}
+		virtual void consume(std::function<void(Type&&)> functor) = 0;
+	};
 
 	/**
 	 * @class json::value
@@ -325,7 +326,7 @@ namespace json {
 		* @brief Move ctor.
 		*/
 		string(std::string&& str) noexcept
-			: m_string(str) { }
+			: m_string(std::forward(str)) { }
 		/*
 		* @brief Copy assignment.
 		*/
@@ -457,21 +458,24 @@ namespace json {
 		/*
 		* @brief Move ctor.
 		*/
-		array(array&& other) noexcept {
-			std::swap(m_arr, other.m_arr);
-		}
+		array(array&& other) noexcept
+			: m_arr(other.m_arr) { }
 		/*
 		* @brief Copy assignment.
 		*/
-		array& operator=(array const& other) {
-			*this = array(other);
+		array& operator=(const array& other) {
+			if (*this != &other) {
+				*this = array(other);
+			}
 			return *this;
 		}
 		/*
 		* @brief Move assignment.
 		*/
 		array& operator=(array&& other) noexcept {
-			*this = array(other);
+			if (*this != &other) {
+				*this = array(other);
+			}
 			return *this;
 		}
 		~array() {}
