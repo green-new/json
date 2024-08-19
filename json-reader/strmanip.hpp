@@ -27,9 +27,7 @@ namespace grammar {
 		/**
 		* @brief ',' comma.
 		*/
-		value_separator = 0x2c
-	};
-	enum class parsing : char {
+		value_separator = 0x2c,
 		/**
 		* @brief '\"' double quotation mark.
 		*/
@@ -65,34 +63,40 @@ namespace grammar {
 		/**
 		* @brief 'u' starts a unicode sequence (must be escaped, not a control character by itself).
 		*/
-		unicode = 0x75
-	};
-	namespace ws {
+		unicode = 0x75,
 		/**
 		* @brief ' ' space.
 		*/
-		char space = 0x20;
+		space = 0x20,
 		/**
 		* @brief '\\t' horizontal tab.
 		*/
-		char ht = 0x09;
+		ht = 0x09,
 		/**
 		* @brief '\\n' new line/line feed.
 		*/
-		char lfnl = 0x0a;
+		lfnl = 0x0a,
 		/**
 		* @brief '\\r' carriage return.
 		*/
-		char cr = 0x0d;
+		cr = 0x0d
+	};
+	/**
+	* @brief Determines if the provided character @c is a whitespace character.
+	*
+	* @return True if whitespace, false if not.
+	*/
+	bool is_ws(char c) {
+		return c == space || c == ht || c == lfnl || c == cr;
+	}
 
-		/**
-		* @brief Determines if the provided character @c is a whitespace character.
-		*
-		* @return True if whitespace, false if not.
-		*/
-		bool is_ws(char c) {
-			return c == space || c == ht || c == lfnl || c == cr;
-		}
+	/**
+	* @brief Determines if the provided character @c is a newline (carriage return or new line) character.
+	*
+	* @return True if newline, false if not.
+	*/
+	bool is_nl(char c) {
+		return c == lfnl || c == cr;
 	}
 }
 }

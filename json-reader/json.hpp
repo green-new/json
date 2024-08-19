@@ -481,20 +481,13 @@ namespace json {
 	public:
 		/*
 		* @brief Gets the element at the provided index.
+		* Assumes the index is in the valid range. Undefined behavior if not.
 		* 
 		* @param index Index of the array.
 		* 
 		* @returns The array element at the index.
 		*/
 		json::value& at(size_t index) {
-			/*
-			* @todo Provide error callbacks instead of the array class handling the errors with a namespaced/enum class value of a json error.
-			*/
-			if (index >= m_arr.size()) {
-				std::ostringstream ss;
-				std::string err_msg = std::format("\'index\' was out of range for \'json::array\': array was size {}, index was {}", m_arr.size(), index);
-				throw std::out_of_range(err_msg);
-			}
 			return *m_arr.at(index);
 		}
 		/*
