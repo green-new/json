@@ -99,7 +99,7 @@ namespace grammar {
 		return c == lfnl || c == cr;
 	}
 	
-	const std::map<char, char> groups = {
+	const std::map<char, char> closing_groups = {
 		{ begin_object, end_object },
 		{ begin_array, end_array },
 	};

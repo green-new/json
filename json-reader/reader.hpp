@@ -10,7 +10,7 @@ namespace json {
 	class reader {
 	public:
 		reader(const std::string& json)
-			: m_json(json.c_str(), json.size) { }
+			: m_json(json.data(), json.size()) { }
 		reader(const reader& other) = delete;
 		reader(reader&& other) noexcept = default;
 		reader& operator=(const reader& other) = delete;
@@ -19,12 +19,13 @@ namespace json {
 		/** @brief Checks to see if the json string starts with an object.
 		 * @throws std::runtime_exception
 		 */
-		void checkStartsWithRoot() {
+		void checkRoot() {
 			std::string_view::const_iterator begin = m_json.cbegin();
 			std::string_view::const_iterator end = m_json.cend();
 			size_t nlCount = 0;
 			size_t charCount = 0;
-			for (const auto& it = begin; it != end; it++) {
+			bool parsingRoot = false;
+			for (auto& it = begin; it != end; it++) {
 				charCount++;
 				char c = (char) *it;
 				if (json::grammar::is_nl(c)) {
@@ -34,23 +35,34 @@ namespace json {
 				if (json::grammar::is_ws(c)) {
 					continue;
 				}
-				if (c != json::grammar::control::begin_object) {
+				if (!parsingRoot && c != json::grammar::control::begin_object) {
 					throw std::runtime_exception(std::format("On line '%d', character '%d', expected '{' to declare beginning of JSON root element, found '%c'", nlCount, c));
 				}
+				if (parsingRoot && c == json::grammar::control::end_object) {
+					parsingRoot = false;
+					break;
+				}
+				// 'c' must be a '{'.
+				parsingRoot = true;
+			}
+			if (parsingRoot) {
+				throw std::runtime_exception("On line '%d', character '%d', expected '}' to terminate JSON root object, could not find such character", nlCount, charCount);
 			}
 		}
 		/** @brief Checks to see if objects, strings, and arrays are correctly bounded by their bracket type (e.g., [], {}, "").
 		 * @throws std::runtime_exception
 		 */
-		void checkGroupsAreClosed() {
+		void checkGroups() {
 			std::string_view::const_iterator begin = m_json.cbegin();
 			std::string_view::const_iterator end = m_json.cend();
 			size_t nlCount = 0;
 			size_t charCount = 0;
-			std::stack<char> stk{};
 			// Parse through each char.
+			// Must skip escaped quotation mark characters.
 			bool escaping = false;
-			for (const auto& it = begin; it != end; it++) {
+			const std::string fmt = "On line '%d', character '%d', expected '%c', but found '%c'";
+			std::stack<char> stk{};
+			for (auto& it = begin; it != end; it++) {
 				charCount++;
 				char c = (char) *it;
 				if (json::grammar::is_nl(c)) {
@@ -61,40 +73,34 @@ namespace json {
 					escaping = false;
 					continue;
 				}
+				if (c == json::grammar::control::escape) {
+					escaping = true;
+					continue;
+				}
 				if (json::grammar::is_ws(c)
 				|| (c != json::grammar::control::begin_object
 				&& c != json::grammar::control::begin_array
 				&& c != json::grammar::control::quotation_mark) {
-					if (c == json::grammar::control::escape) {
-						escaping = true;
-					}
 					continue;
 				}
-				const std::string fmt = "On line '%d', character '%d', expected '%c', but found '%c'";
+				if (escaping && c == json::grammar::control::quotation_mark) {
+					escaping = false;
+					continue;
+				}
+				const char begin = stk.top();
 				// Push a valid opening char to the stack.
 				if (c == json::grammar::control::begin_object
 				|| c == json::grammar::control::begin_array
 				|| c == json::grammar::control::quotation_mark) {
 					stk.push(c);
-				} else if (c == json::grammar::control::end_object) {
-					// If the top of the stack is not a 'begin_object', then we know the grouping is invalid.
-					if (stk.empty() || stk.top() != json::grammar::control::begin_object) {
-						char expect = stk.empty()? json::grammar::control::groups[stk.top()]) : '?';
-						throw std::runtime_exception(std::format(fmt, nlCount, charCount, expect, c));
-					}
+				} else if (!escaping
+				&& !stk.empty()
+				&& c== json::grammar::control::closing_groups[c]) {
 					stk.pop();
-				} else if (c == json::grammar::control::end_array) {
-					if (stk.empty() || stk.top() != json::grammar::control::begin_array) {
-						char expect = stk.empty()? json::grammar::control::groups[stk.top()]) : '?';
-						throw std::runtime_exception(std::format(fmt, nlCount, charCount, expect, c));
-					}
-					stk.pop();
-				} else if (!escaping && c == json::grammar::control::quotation_mark) {
-					if (stk.empty() || stk.top() != json::grammar::control::quotation_mark) {
-						char expect = stk.empty()? json::grammar::control::groups[stk.top()]) : '?';
-						throw std::runtime_exception(std::format(fmt, nlCount, charCount, expect, c));
-					}
-					stk.pop();
+				} else {	
+					// We know the grouping is invalid at this point
+					char expect = stk.empty()? json::grammar::control::groups[stk.top()]) : '?';
+					throw std::runtime_exception(std::format(fmt, nlCount, charCount, expect, c));
 				}
 			}
 			if (!stk.empty()) {
@@ -110,7 +116,7 @@ namespace json {
 			size_t nlCount = 0;
 			size_t charCount = 0;
 			bool parsingString = false;
-			for (const auto& it = begin; it != end; it++) {
+			for (auto& it = begin; it != end; it++) {
 				charCount++;
 				char c = (char) *it;
 				if (json::grammar::is_nl(c)) {
@@ -143,7 +149,7 @@ namespace json {
 			size_t charCount = 0;
 			bool parsingArray = false;
 			bool parsingElement = false;
-			for (const auto& it = begin; it != end; it++) {
+			for (auto& it = begin; it != end; it++) {
 				charCount++;
 				char c = (char) *it;
 				if (json::grammar::is_nl(c)) {
@@ -179,37 +185,30 @@ namespace json {
 			std::string_view::const_iterator begin = m_json.cbegin();
 			std::string_view::const_iterator end = m_json.cend();
 			
-			// Initial checks
+			// Validation phase:
+			// Determine if the string is valid JSON
 			try {
-				checkStartsWithRoot();
-				checkGroupsAreClosed();
+				checkRoot();
+				checkGroups();
 				checkNameSeparators();
 				checkArrays();
-			} catch (std::runtime_error& err) {
+			} catch (const std::runtime_error& err) {
+				// Let the user handle the error
 				throw err;
 			}
-			// At this point, JSON data is correctly validated in the following ways:
-			// - Consists of a root object (the global '{ }')
-			// - All syntactically important groups are opened and closed correctly
-			// - Arrays are syntactically correct
+			// At this point, JSON data is validated
+			// Generation phase:
+			// Generate the json root object
 			
-			// Ignore whitespace if we have not declared a string
-			bool ignoreWs = true;
-			for (const auto& it = begin; it != end; it++) {
-				char c = (char) *it;
-				if (ignoreWs && json::grammar::ws::is_ws(c)) {
-					continue;
-				}
-				// 'ignoreWs' is false, or 'ignoreWs' is true AND 'c' is not a whitespace
-				switch (c) {
-					case 
-				}
-			}
+			/**
+			* Generate the json here ...
+			*/
 			
 			return res;
 		}
 	private:
 		// @todo Not thread safe if m_json is modified while the reader parses the json.
+		// Mark the class as non-threadsafe and maybe offer a threadsafe option by copying the string.
 		std::string_view m_json{};
 	};
 }
