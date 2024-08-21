@@ -86,7 +86,7 @@ namespace grammar {
 	*
 	* @return True if whitespace, false if not.
 	*/
-	bool is_ws(char c) {
+	constexpr inline bool is_ws(char c) {
 		return c == space || c == ht || c == lfnl || c == cr;
 	}
 
@@ -95,8 +95,13 @@ namespace grammar {
 	*
 	* @return True if newline, false if not.
 	*/
-	bool is_nl(char c) {
+	constexpr inline bool is_nl(char c) {
 		return c == lfnl || c == cr;
 	}
+	
+	const std::map<char, char> groups = {
+		{ begin_object, end_object },
+		{ begin_array, end_array },
+	};
 }
 }
