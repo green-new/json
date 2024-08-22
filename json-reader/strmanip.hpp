@@ -40,7 +40,7 @@ namespace grammar {
 	*/
 	char forward_slash = 0x2f;
 	/**
-	* @brief 'b' backspace (must be escaped, not a control character by itself).
+	* @brief 'b' character (must be escaped, not a control character by itself).
 	*/
 	char backspace = 0x62;
 	/**
@@ -68,13 +68,21 @@ namespace grammar {
 	*/
 	char space = 0x20;
 	/**
+	* @brief '\\b' backspace.
+	*/
+	char bs = 0x08;
+	/**
 	* @brief '\\t' horizontal tab.
 	*/
 	char ht = 0x09;
 	/**
 	* @brief '\\n' new line/line feed.
 	*/
-	char lfnl = 0x0a;
+	char nl = 0x0a;
+	/**
+	* @brief '\\f' form feed. 
+	*/
+	char ff = 0x0c;
 	/**
 	* @brief '\\r' carriage return.
 	*/
@@ -93,7 +101,7 @@ namespace grammar {
 	* @return True if newline, false if not.
 	*/
 	constexpr inline bool is_nl(char c) {
-		return c == lfnl || c == cr;
+		return c == nl || c == cr;
 	}
 	/**
 	 * begin characters -> end characters map.

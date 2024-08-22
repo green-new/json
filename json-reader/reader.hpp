@@ -12,18 +12,67 @@ namespace json {
 	class reader {
 	public:
 		reader(const std::string& json)
-			: m_json(json.data(), json.size()) { }
+			: m_json(json) { }
 		reader(const reader& other) = delete;
 		reader(reader&& other) noexcept = default;
 		reader& operator=(const reader& other) = delete;
 		~reader() = default;
 	private:
+		/** @brief Converts all escaped characters and unicode sequences into 
+		 * their byte representation. Modifies the string. Follows the UTF-8
+		 * encoding.
+		 */
+		void byteify() {
+			// Basic control characters 
+			size_t i;
+			while (i = m_json.find("\\\"" != std::string::npos) {
+				m_json.replace(i, 2, "\"");
+			}
+			i = 0;
+			while (i = m_json.find("\\\\") != std::string::npos) {
+				m_json.replace(i, 2, "\\");
+			}
+			i = 0;
+			while (i = m_json.find("\\b") != std::string::npos) {
+				m_json.replace(i, 2, json::grammar::bs);
+			}
+			i = 0;
+			while (i = m_json.find("\\f") != std::string::npos) {
+				m_json.replace(i, 2, json::grammar::ff);
+			}
+			i = 0;
+			while (i = m_json.find("\\n") != std::string::npos) {
+				m_json.replace(i, 2, json::grammar::nl);
+			}
+			i = 0;
+			while (i = m_json.find("\\r") != std::string::npos) {
+				m_json.replace(i, 2, json::grammar::cr);
+			}
+			i = 0;
+			while (i = m_json.find("\\t") != std::string::npos) {
+				m_json.replace(i, 2, json::grammar::ht);
+			}
+			i = 0;
+			// Unicode control characters
+			// Assumes escaped unicode codepoints are 4 hex digits
+			constexpr static size_t codepoint_len = 4;
+			using code_type = std::conditional<codepoint_len <= 4, short, int>;
+			constexpr static size_t byte_len = sizeof code_type;
+			while (i = m_json.find("\\u") != std::string::npos) {
+				code_type code = (code_type) std::stoi(m_json.substr(i, i + codepoint_len), nullptr, 16);
+				char bytes[byte_len] = {0};
+				for (size_t i = 0; i < byte_len; i++) {
+					bytes[i] = (code >> ((sizeof byte_len - 1 - i) * 8)) & 0xff;
+				}					
+				m_json.replace(i, 2 + codepoint_len, bytes, codepoint_len);
+			}
+		}
 		/** @brief Checks to see if the json string starts with an object.
 		 * @throws std::runtime_error
 		 */
 		void checkRoot() {
-			std::string_view::const_iterator begin = m_json.cbegin();
-			std::string_view::const_iterator end = m_json.cend();
+			std::string::const_iterator begin = m_json.cbegin();
+			std::string::const_iterator end = m_json.cend();
 			size_t nlCount = 0;
 			size_t charCount = 0;
 			bool parsingRoot = false;
@@ -55,8 +104,8 @@ namespace json {
 		 * @throws std::runtime_error
 		 */
 		void checkGroups() {
-			std::string_view::const_iterator begin = m_json.cbegin();
-			std::string_view::const_iterator end = m_json.cend();
+			std::string::const_iterator begin = m_json.cbegin();
+			std::string::const_iterator end = m_json.cend();
 			size_t nlCount = 0;
 			size_t charCount = 0;
 			// Parse through each char.
@@ -113,8 +162,8 @@ namespace json {
 		 * @throws std::runtime_error
 		 */
 		void checkNameSeparators() {
-			std::string_view::const_iterator begin = m_json.cbegin();
-			std::string_view::const_iterator end = m_json.cend();
+			std::string::const_iterator begin = m_json.cbegin();
+			std::string::const_iterator end = m_json.cend();
 			size_t nlCount = 0;
 			size_t charCount = 0;
 			bool parsingString = false;
@@ -146,12 +195,14 @@ namespace json {
 		 * @throws std::runtime_error
 		 */
 		void checkArrays() {
-			std::string_view::const_iterator begin = m_json.cbegin();
-			std::string_view::const_iterator end = m_json.cend();
+			std::string::const_iterator begin = m_json.cbegin();
+			std::string::const_iterator end = m_json.cend();
 			size_t nlCount = 0;
 			size_t charCount = 0;
+			bool escaping = false;
 			bool parsingArray = false;
 			bool parsingElement = false;
+			bool parsingStr = false;
 			for (auto& it = begin; it != end; it++) {
 				charCount++;
 				char c = (char) *it;
@@ -165,6 +216,7 @@ namespace json {
 				// Therefore, we can assume after finding a 'begin_array' we
 				// read until there is a 'end_array'.
 				// If c is whitespace or not a control c, skip it.
+				// [ {,} ]
 				if (!parsingArray 
 				&& (json::grammar::is_ws(c)
 				|| c != json::grammar::begin_array)) {
@@ -175,7 +227,24 @@ namespace json {
 					continue;
 				}
 				// At this point, we are reading an array.
-				
+				if (c == json::grammar::end_array) {
+					parsingArray = false;
+					continue;
+				}
+				if (c == json::grammar::escape) {
+					escaping = true;
+					continue;
+				}
+				if (!escaping && c == json::grammar::quotation_mark) {
+					parsingStr = !parsingStr;
+					continue;
+				}
+				if (!parsingStr && !parsingElement && !escaping && parsingArray) {
+					throw std::runtime_error(std::format("On line '%d', character '%d', whitespace cannot be a JSON array element"), nlCount, charCount);
+				}
+				if (!parsingStr && parsingElement && !escaping && parsingArray) {
+					throw std::runtime_error(std::format("On line '%d', character '%d', cannot declare end of JSON array element with the comma (',') control while ));
+				}
 			}	
 		}
 	public:
@@ -185,8 +254,13 @@ namespace json {
 		 */
 		json::root read() {
 			json::root res{};
-			std::string_view::const_iterator begin = m_json.cbegin();
-			std::string_view::const_iterator end = m_json.cend();
+			std::string::const_iterator begin = m_json.cbegin();
+			std::string::const_iterator end = m_json.cend();
+			
+			// Byteify phase:
+			// Convert escaped characters and unicode characters to bytes
+			// Should not throw a json exception
+			byteify();
 			
 			// Validation phase:
 			// Determine if the string is valid JSON
@@ -212,6 +286,6 @@ namespace json {
 	private:
 		// @todo Not thread safe if m_json is modified while the reader parses the json.
 		// Mark the class as non-threadsafe and maybe offer a threadsafe option by copying the string.
-		std::string_view m_json{};
+		std::string m_json{};
 	};
 }
