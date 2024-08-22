@@ -3,6 +3,8 @@
 #include <sstream>
 #include <vector>
 #include <algorithm>
+#include <stack>
+#include <exception>
 #include "strmanip.hpp"
 #include "json.hpp"
 
@@ -17,7 +19,7 @@ namespace json {
 		~reader() = default;
 	private:
 		/** @brief Checks to see if the json string starts with an object.
-		 * @throws std::runtime_exception
+		 * @throws std::runtime_error
 		 */
 		void checkRoot() {
 			std::string_view::const_iterator begin = m_json.cbegin();
@@ -35,10 +37,10 @@ namespace json {
 				if (json::grammar::is_ws(c)) {
 					continue;
 				}
-				if (!parsingRoot && c != json::grammar::control::begin_object) {
-					throw std::runtime_exception(std::format("On line '%d', character '%d', expected '{' to declare beginning of JSON root element, found '%c'", nlCount, c));
+				if (!parsingRoot && c != json::grammar::begin_object) {
+					throw std::runtime_error(std::format("On line '%d', character '%d', expected '{' to declare beginning of JSON root element, found '%c'", nlCount, c));
 				}
-				if (parsingRoot && c == json::grammar::control::end_object) {
+				if (parsingRoot && c == json::grammar::end_object) {
 					parsingRoot = false;
 					break;
 				}
@@ -46,11 +48,11 @@ namespace json {
 				parsingRoot = true;
 			}
 			if (parsingRoot) {
-				throw std::runtime_exception("On line '%d', character '%d', expected '}' to terminate JSON root object, could not find such character", nlCount, charCount);
+				throw std::runtime_error(std::format("On line '%d', character '%d', expected '}' to terminate JSON root object, could not find such character", nlCount, charCount));
 			}
 		}
 		/** @brief Checks to see if objects, strings, and arrays are correctly bounded by their bracket type (e.g., [], {}, "").
-		 * @throws std::runtime_exception
+		 * @throws std::runtime_error
 		 */
 		void checkGroups() {
 			std::string_view::const_iterator begin = m_json.cbegin();
@@ -69,46 +71,46 @@ namespace json {
 					nlCount++;
 					charCount = 0;
 				}
-				if (escaping && c == json::grammar::control::escape) {
+				if (escaping && c == json::grammar::escape) {
 					escaping = false;
 					continue;
 				}
-				if (c == json::grammar::control::escape) {
+				if (c == json::grammar::escape) {
 					escaping = true;
 					continue;
 				}
 				if (json::grammar::is_ws(c)
-				|| (c != json::grammar::control::begin_object
-				&& c != json::grammar::control::begin_array
-				&& c != json::grammar::control::quotation_mark) {
+				|| (c != json::grammar::begin_object
+				&& c != json::grammar::begin_array
+				&& c != json::grammar::quotation_mark)) {
 					continue;
 				}
-				if (escaping && c == json::grammar::control::quotation_mark) {
+				if (escaping && c == json::grammar::quotation_mark) {
 					escaping = false;
 					continue;
 				}
 				const char begin = stk.top();
 				// Push a valid opening char to the stack.
-				if (c == json::grammar::control::begin_object
-				|| c == json::grammar::control::begin_array
-				|| c == json::grammar::control::quotation_mark) {
+				if (c == json::grammar::begin_object
+				|| c == json::grammar::begin_array
+				|| c == json::grammar::quotation_mark) {
 					stk.push(c);
 				} else if (!escaping
 				&& !stk.empty()
-				&& c== json::grammar::control::closing_groups[c]) {
+				&& c== json::grammar::closing_groups[c]) {
 					stk.pop();
 				} else {	
 					// We know the grouping is invalid at this point
-					char expect = stk.empty()? json::grammar::control::groups[stk.top()]) : '?';
-					throw std::runtime_exception(std::format(fmt, nlCount, charCount, expect, c));
+					char expect = stk.empty()? json::grammar::closing_groups[stk.top()] : '?';
+					throw std::runtime_error(std::format(fmt, nlCount, charCount, expect, c));
 				}
 			}
 			if (!stk.empty()) {
-				throw std::runtime_exception(std::format("On indeterminate line '?', indeterminate c '?', expected valid bounds ('{ }', '[ ]', '\" \"') to indeterminate JSON value, but could not identify which"));
+				throw std::runtime_error(std::format("On indeterminate line '?', indeterminate c '?', expected valid bounds ('{ }', '[ ]', '\" \"') to indeterminate JSON value, but could not identify which"));
 			}
 		}
 		/** @brief Checks to see if name separators (':') are used correctly.
-		 * @throws std::runtime_exception
+		 * @throws std::runtime_error
 		 */
 		void checkNameSeparators() {
 			std::string_view::const_iterator begin = m_json.cbegin();
@@ -116,6 +118,7 @@ namespace json {
 			size_t nlCount = 0;
 			size_t charCount = 0;
 			bool parsingString = false;
+
 			for (auto& it = begin; it != end; it++) {
 				charCount++;
 				char c = (char) *it;
@@ -126,13 +129,13 @@ namespace json {
 				// At the start of this function, we have two guarantees:
 				// - JSON consists of the root object
 				// - All groups are closed correctly
-				if (!parsingArray 
+				if (!parsingString
 				&& (json::grammar::is_ws(c)
-				|| c != json::grammar::control::begin_array)) {
+				|| c != json::grammar::begin_array)) {
 					continue;
 				}
-				if (c == json::grammar::control::begin_array) {
-					parsingArray = true;
+				if (c == json::grammar::begin_array) {
+					parsingString = true;
 					continue;
 				}
 				// At this point, we are reading an array.
@@ -140,7 +143,7 @@ namespace json {
 			}				
 		}
 		/** @brief Checks to see if arrays are enumerated correctly with the JSON value separator ','.
-		 * @throws std::runtime_exception
+		 * @throws std::runtime_error
 		 */
 		void checkArrays() {
 			std::string_view::const_iterator begin = m_json.cbegin();
@@ -164,10 +167,10 @@ namespace json {
 				// If c is whitespace or not a control c, skip it.
 				if (!parsingArray 
 				&& (json::grammar::is_ws(c)
-				|| c != json::grammar::control::begin_array)) {
+				|| c != json::grammar::begin_array)) {
 					continue;
 				}
-				if (c == json::grammar::control::begin_array) {
+				if (c == json::grammar::begin_array) {
 					parsingArray = true;
 					continue;
 				}
