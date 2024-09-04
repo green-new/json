@@ -1,5 +1,6 @@
 #pragma once
 #include <cstddef>
+#include <algorithm>
 
 namespace json {
 namespace grammar {
@@ -110,5 +111,20 @@ namespace grammar {
 		{ begin_object, end_object },
 		{ begin_array, end_array },
 	};
+}
+void trim(std::string& str) {
+	// Trim whitespace not within quotation marks
+	bool parsingStr;
+	for (auto& it = str.begin(); it != str.end(); it++) {
+		char c = *it;
+		if (!parsingStr && c == json::grammar::quotation_mark) {
+			parsingStr = true;
+		} else if (parsingStr && c == json::grammar::quotation_mark) {
+			parsingStr = false;
+		}
+		if (!parsingStr && std::isspace(c)) {
+			str.erase(it);
+		}
+	}
 }
 }

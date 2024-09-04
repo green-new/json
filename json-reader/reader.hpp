@@ -64,7 +64,7 @@ namespace json {
 				for (size_t i = 0; i < byte_len; i++) {
 					bytes[i] = (code >> ((sizeof byte_len - 1 - i) * 8)) & 0xff;
 				}					
-				m_json.replace(i, 2 + codepoint_len, bytes, codepoint_len);
+				m_json.replace(i, codepoint_len + 2, bytes, codepoint_len);
 			}
 		}
 		/** @brief Checks to see if the json string starts with an object.
@@ -155,7 +155,7 @@ namespace json {
 				}
 			}
 			if (!stk.empty()) {
-				throw std::runtime_error(std::format("On indeterminate line '?', indeterminate c '?', expected valid bounds ('{ }', '[ ]', '\" \"') to indeterminate JSON value, but could not identify which"));
+				throw std::runtime_error(std::format("On indeterminate line '?', indeterminate character '?', expected valid bounds ('{ }', '[ ]', '\" \"') to indeterminate JSON value, but could not identify which"));
 			}
 		}
 		/** @brief Checks to see if name separators (':') are used correctly.
