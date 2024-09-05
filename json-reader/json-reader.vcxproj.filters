@@ -29,6 +29,9 @@
     <ClInclude Include="builder.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="iterable.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="example.json" />

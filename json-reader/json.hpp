@@ -22,6 +22,7 @@
 #include <format>
 #include <functional>
 #include <utility>
+#include "iterable.hpp"
 
 #pragma once
 
@@ -46,73 +47,6 @@ namespace json {
 	class boolean;
 	class array;
 	class object;
-	
-	/**
-	* @brief Iterable interface. Should be its own header file.
-	*/
-	template<class Container, class Type>
-	struct iterable {
-		/**
-		* @brief Type alias to the array's iterator.
-		*/
-		using iterator = typename Container::iterator;
-		/**
-		* @brief Type alias to the array's const iterator.
-		*/
-		using const_iterator = typename Container::const_iterator;
-		/**
-		* @brief Type alias to the array's reverse iterator.
-		*/
-		using reverse_iterator = typename Container::reverse_iterator;
-		/**
-		* @brief Type alias to the array's const reverse iterator.
-		*/
-		using const_reverse_iterator = typename Container::const_reverse_iterator;
-		/**
-		* @brief Begin iterator.
-		*/
-		virtual iterator begin() noexcept = 0;
-		/**
-		* @brief End iterator.
-		*/
-		virtual iterator end() noexcept = 0;
-		/**
-		* @brief Reverse begin iterator.
-		*/
-		virtual reverse_iterator rbegin() noexcept = 0;
-		/**
-		* @brief Reverse end iterator.
-		*/
-		virtual reverse_iterator rend() noexcept = 0;
-		/**
-		* @brief Begin const iterator.
-		*/
-		virtual const_iterator cbegin() const noexcept = 0;
-		/**
-		* @brief End const iterator.
-		*/
-		virtual const_iterator cend() const noexcept = 0;
-		/**
-		* @brief Begin const reverse iterator.
-		*/
-		virtual const_reverse_iterator crbegin() const noexcept = 0;
-		/**
-		* @brief End const reverse iterator.
-		*/
-		virtual const_reverse_iterator crend() const noexcept = 0;
-		/**
-		* @brief Calls a user-provided callback that iterates through each element as a const reference in the collection.
-		*/
-		virtual void for_each(std::function<void, (const Type& element)> functor) const = 0;
-		/**
-		* @brief Calls a user-provided callback that iterates through each element as a mutable reference in the collection.
-		*/
-		virtual void for_each(std::function<void(Type& element)> functor) = 0;
-		/**
-		* @brief Moves each element out of the collection into user ownership.
-		*/
-		virtual void consume(std::function<void(Type&&)> functor) = 0;
-	};
 
 	/**
 	 * @class json::value
@@ -929,13 +863,13 @@ namespace json {
 			: m_root() { }
 		root(const root& other) {
 			// Cannot copy unique ptrs. Must do a deep manual copy
-			m_props.clear();
-			for (const auto& [key, val] : other.m_props) {
+			m_root.clear();
+			for (const auto& [key, val] : other.m_root) {
 				if (val) {
 					// Copy ctor called
-					m_props.insert({ key, val->clone()});
+					m_root.insert({ key, val->clone()});
 				} else {
-					m_props.insert({ key, nullptr });
+					m_root.insert({ key, nullptr });
 				}
 			}
 		}

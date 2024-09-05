@@ -4,6 +4,7 @@
 #include "json.hpp"
 #include "reader.hpp"
 #include "strmanip.hpp"
+#include "builder.hpp"
 
 std::string build_bad_string() {
 	std::ifstream f;
@@ -56,33 +57,6 @@ int json_test2() {
 
 int json_test() {
 	using namespace std::string_literals;
-	json::root_builder b{};
-	
-	// Example builder (how we want the client to see the api)
-	json::root obj = 
-		// Create an object at the root called "parcel"
-		b.insert("parcel")
-			// Create an object at the object "parcel" called "199.8-3-6"
-			.insert<json::object>("199.8-3-6")
-				// Insert a number called "valuation" equal to 1e6, etc...
-				.insert<json::number<json::storage_policy::uinteger>>("valuation", 1e6)
-				.insert<json::boolean>("paid_taxes", false)
-				.insert<json::string>("owner", "me")
-				// Insert an array called "geodata"
-				.insert<json::array>("geodata")
-					// Insert a number into the array "geodata" with the value 42.06f, etc...
-					.insert<json::number<json::storage_policy::floating>>(42.06f)
-					.insert<json::boolean>(false)
-					// Push a "null" value into the array
-					.insert<json::nothing>()
-					// Finish building the array "geodata"
-					.build()
-				// Finish building the object "199.8-3-6"
-				.build()
-			// Finish building the object "parcel"
-			.build()
-		// Finish building the root node
-		.complete();
 		
 	json::root_builder b{};
 	json::root r = 
@@ -91,14 +65,11 @@ int json_test() {
 			.number<json::storage_policy::floating>(43.54f)
 			.null()
 			.string("Hello\n")
-			.finish();
-		.number<json::storage_policy:uinteger>("valuation", 65)
+			.finish()
+		.number<json::storage_policy::uinteger>("valuation", 65)
 		.string("apple", "orange")
 		.finish()
 	.finish();
-					
-
-	std::cout << obj;
 
 	return 0;
 }
