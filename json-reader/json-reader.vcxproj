@@ -129,13 +129,26 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="array.cpp" />
+    <ClCompile Include="boolean.cpp" />
+    <ClCompile Include="number.cpp" />
+    <ClCompile Include="object.cpp" />
+    <ClCompile Include="string.cpp" />
     <ClCompile Include="test.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="array.hpp" />
+    <ClInclude Include="boolean.hpp" />
     <ClInclude Include="builder.hpp" />
     <ClInclude Include="iterable.hpp" />
     <ClInclude Include="json.hpp" />
+    <ClInclude Include="null.hpp" />
+    <ClInclude Include="number.hpp" />
+    <ClInclude Include="object.hpp" />
+    <ClInclude Include="root.hpp" />
+    <ClInclude Include="string.hpp" />
     <ClInclude Include="strmanip.hpp" />
+    <ClInclude Include="value.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="example.json" />
