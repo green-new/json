@@ -1,5 +1,6 @@
 #include <sstream>
 #include "iterable.hpp"
+#include "null.hpp"
 #include "value.hpp"
 namespace json {
 /**
@@ -22,9 +23,8 @@ public:
 			}
 		}
 	}
-	root(root&& other) noexcept {
-		std::swap(m_root, other.m_root);
-	}
+	root(root&& other) noexcept
+		m_root(other.m_root) {}
 	root& operator=(const root& other) {
 		if (this != &other) {
 			m_root = other.m_root;
@@ -33,7 +33,7 @@ public:
 	}
 	root& operator=(root&& other) noexcept {
 		if (this != &other) {
-			std::swap(m_root, other.m_root);
+			root(other.m_root);
 		}
 		return *this;
 	}
@@ -49,13 +49,40 @@ public:
 	*/
 	template<typename JsonType, typename... CtorArgs>
 		requires std::constructible_from<JsonType, CtorArgs...>
-	&& std::derived_from<JsonType, json::value>
-		JsonType& insert(const std::string& name, CtorArgs... ctorArgs) {
+		&& std::derived_from<JsonType, json::value>
+	JsonType& insert(const std::string& name, CtorArgs... ctorArgs) {
 		m_props.insert({ name, std::make_unique<JsonType>(ctorArgs...) });
 		/**
 		* @todo Undefined behavior if m_props[name] does not instantiate a JsonValue (could happen due to memory issues).
 		*/
 		return (JsonType&)*m_props.at(name);
+	}
+	/**
+	* @brief Return an lvalue reference to the specified JSON value.
+	* @param name Name of the JSON value.
+	* @return L-value reference to the object meant for moving.
+	*/
+	value& get(const std::string& name) {
+		return *m_root.at(name);
+	}
+	/**
+	* @brief Return a copy to the old specified JSON value, replacing it with a null value internally.
+	* @param name Name of the JSON value.
+	* @return Copy to the old object.
+	*/
+	value move(const std::string& name) {
+		return std::exchange(*m_root.at(name), json::null());
+	}
+	/**
+	* @brief Return a copy to the old specified JSON value, replacing it with a provided type.
+	* @tparam JsonType Type to replace the original JSON value with.
+	* @param name Name of the JSON value.
+	* @return Copy to the old object.
+	*/
+	template<typename JsonType>
+		requires std::derived_from<JsonType, json::value>
+	value replace(const std::string& name) {
+		return std::exchange(*m_root.at(name), JsonType());
 	}
 public:
 	std::string to_string() const override {

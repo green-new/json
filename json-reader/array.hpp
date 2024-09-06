@@ -99,6 +99,10 @@ public:
 		m_arr.push_back(std::make_unique<JsonType>(temp));
 		return *m_arr.back();
 	}
+	array& push(const array& arr) {
+		m_arr.push_back(
+		return *m_arr.back();
+	}
 	/*
 	* @brief Removes the last element from the array.
 	*/

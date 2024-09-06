@@ -34,8 +34,8 @@ public:
 		return os;
 	}
 	/**
-		* @brief Trivial virtual destructor.
-		*/
+	* @brief Trivial virtual destructor.
+	*/
 	virtual ~value() = default;
 protected:
 	/*
@@ -45,10 +45,20 @@ protected:
 	virtual value* clone_impl() const = 0;
 };
 
+class value_parent : public value {
+public:
+	virtual void remove_child(value* child) = 0;
+}
+
 /**
- * @brief Typedef pointer for value-derived classes
+ * @brief Type alias for value pointers that are owned and managed by other json values (objects, arrays, and roots)
  */
 using value_ptr = std::unique_ptr<value>;
+
+/** 
+ * @brief Type alias for value pointers that are unowning.
+ */
+using value_sptr = std::shared_ptr<value>;
 
 /*
 * @brief Type alias for the JSON object property map.

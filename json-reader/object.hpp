@@ -37,8 +37,6 @@ public:
 			if (val) {
 				// Copy ctor called
 				m_props.insert({ key, val->clone() });
-			} else {
-				m_props.insert({ key, nullptr });
 			}
 		}
 	}
@@ -93,13 +91,13 @@ public:
 	*/
 	template<typename JsonType, typename... CtorArgs>
 		requires std::constructible_from<JsonType, CtorArgs...>
-	&& std::derived_from<JsonType, json::value>
-		JsonType& insert(const std::string& name, CtorArgs... ctorArgs) {
-		m_props.insert({ name, std::make_unique<JsonType>(ctorArgs...) });
-		/**
-			* @todo Undefined behavior if m_props[name] does not instantiate a JsonValue (could happen due to memory issues).
-			*/
-		return (JsonValue&)*m_props.at(name);
+		&& std::derived_from<JsonType, json::value>
+	JsonType& insert(const std::string& name, CtorArgs... ctorArgs) {
+	m_props.insert({ name, std::make_unique<JsonType>(ctorArgs...) });
+	/**
+		* @todo Undefined behavior if m_props[name] does not instantiate a JsonValue (could happen due to memory issues).
+		*/
+	return (JsonValue&)*m_props.at(name);
 	}
 public:
 	/*
