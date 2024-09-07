@@ -1,3 +1,5 @@
+#pragma once
+
 #include <map>
 #include <memory>
 #include <ostream>
@@ -44,11 +46,6 @@ protected:
 	*/
 	virtual value* clone_impl() const = 0;
 };
-
-class value_parent : public value {
-public:
-	virtual void remove_child(value* child) = 0;
-}
 
 /**
  * @brief Type alias for value pointers that are owned and managed by other json values (objects, arrays, and roots)

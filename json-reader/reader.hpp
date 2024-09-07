@@ -6,7 +6,6 @@
 #include <stack>
 #include <exception>
 #include "strmanip.hpp"
-#include "json.hpp"
 
 namespace json {
 	class reader {

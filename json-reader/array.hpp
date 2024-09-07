@@ -1,10 +1,12 @@
+#pragma once
+
 #include "boolean.hpp"
 #include "iterable.hpp"
 #include "null.hpp"
 #include "number.hpp"
 #include "string.hpp"
 #include <sstream>
-#include "value.hpp"
+#include <utility>
 #include <vector>
 
 namespace json {
@@ -35,7 +37,7 @@ namespace json {
 			}
 		}
 		array(array&& other) noexcept
-			: m_arr(other.m_arr) {}
+			: m_arr(std::move(other.m_arr)) {}
 		array& operator=(const array& other) {
 			if (this != &other) {
 				*this = array(other);
@@ -104,7 +106,7 @@ namespace json {
 		 */
 		template<typename... CtorArgs>
 		array& emplace_array(CtorArgs&&... args) {
-			m_arr.emplace_back<array>(std::forward(args)...);
+			m_arr.emplace_back<std::unique_ptr<array>>(std::forward(args)...);
 			return *this;
 		}
 		/**
@@ -129,7 +131,7 @@ namespace json {
 		 */
 		template<typename... CtorArgs>
 		array& emplace_boolean(CtorArgs&&... args) {
-			m_arr.emplace_back<boolean>(std::forward(args)...);
+			m_arr.emplace_back<std::unique_ptr<boolean>>(std::forward(args)...);
 			return *this;
 		}
 		/**
@@ -153,7 +155,7 @@ namespace json {
 		 * @return This array that was modified.
 		 */
 		array& emplace_null() {
-			m_arr.emplace_back<null>(null{});
+			m_arr.emplace_back<std::unique_ptr<null>>({});
 			return *this;
 		}
 		/**
@@ -178,7 +180,7 @@ namespace json {
 		 */
 		template<typename... CtorArgs>
 		array& emplace_number(CtorArgs&&... args) {
-			m_arr.emplace_back<number>(std::forward(args)...);
+			m_arr.emplace_back<std::unique_ptr<number>>(std::forward(args)...);
 			return *this;
 		}
 		/**
@@ -203,7 +205,7 @@ namespace json {
 		 */
 		template<typename... CtorArgs>
 		array& emplace_object(CtorArgs&&... args) {
-			m_arr.emplace_back<object>(std::forward(args)...);
+			m_arr.emplace_back<std::unique_ptr<object>>(std::forward(args)...);
 			return *this;
 		}
 		/**
@@ -228,7 +230,7 @@ namespace json {
 		 */
 		template<typename... CtorArgs>
 		array& emplace_string(CtorArgs&&... args) {
-			m_arr.emplace_back<string>(std::forward(args)...);
+			m_arr.emplace_back<std::unique_ptr<string>>(std::forward(args)...);
 			return *this;
 		}
 		/*

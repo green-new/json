@@ -1,3 +1,5 @@
+#pragma once
+
 #include <sstream>
 #include "iterable.hpp"
 #include "null.hpp"

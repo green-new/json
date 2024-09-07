@@ -1,3 +1,5 @@
+#pragma once
+
 #include <bit>
 #include <format>
 #include <type_traits>

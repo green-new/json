@@ -1,9 +1,11 @@
+#pragma once
+
 namespace json {
-/**
-* @brief Iterable interface.
-*/
-template<class Container>
-struct iterable {
+	/**
+	* @brief Iterable interface.
+	*/
+	template<class Container>
+	struct iterable {
 	/**
 	* @brief Type alias to the array's iterator.
 	*/
@@ -60,5 +62,5 @@ struct iterable {
 	* @return The end of the const reverse iterator of the container.
 	*/
 	virtual const_reverse_iterator crend() const noexcept = 0;
-};
+	};
 }

@@ -1,10 +1,11 @@
+#pragma once
+
 #include "boolean.hpp"
 #include "iterable.hpp"
 #include "null.hpp"
 #include "number.hpp"
 #include <sstream>
 #include "string.hpp"
-#include "value.hpp"
 
 namespace json {
 	// 'array' forward declaration
@@ -38,7 +39,7 @@ namespace json {
 			}
 		}
 		object(object&& other) noexcept 
-			: m_name(other.m_name), m_props(other.m_props) {}
+			: m_name(std::move(other.m_name)), m_props(std::move(other.m_props)) {}
 		object& operator=(const object& other) {
 			if (this != &other) {
 				*this = object(other);
@@ -84,7 +85,7 @@ namespace json {
 		 */
 		template<typename... CtorArgs>
 		object& emplace_array(const std::string& name, CtorArgs&&... args) {
-			m_props.emplace(name, std::forward(args)...);
+			m_props.emplace<std::unique_ptr<array>>(name, std::forward(args)...);
 			return *this;
 		}
 		/**
@@ -105,7 +106,7 @@ namespace json {
 		 */
 		template<typename... CtorArgs>
 		object& emplace_boolean(const std::string& name, CtorArgs&&... args) {
-			m_props.emplace(name, std::forward(args)...);
+			m_props.emplace<std::unique_ptr<boolean>>(name, std::forward(args)...);
 			return *this;
 		}
 		/**
@@ -123,7 +124,7 @@ namespace json {
 		 * @return This object that was modified.
 		 */
 		object& emplace_null(const std::string& name) {
-			m_props.emplace(name);
+			m_props.try_emplace(name);
 			return *this;
 		}
 		/**
@@ -144,7 +145,7 @@ namespace json {
 		 */
 		template<typename... CtorArgs>
 		object& emplace_number(const std::string& name, CtorArgs&&... args) {
-			m_props.emplace(name, std::forward<CtorArgs>(args)...);
+			m_props.emplace<std::unique_ptr<number>>(name, std::forward<CtorArgs>(args)...);
 			return *this;
 		}
 		/**
@@ -165,7 +166,7 @@ namespace json {
 		 */
 		template<typename... CtorArgs>
 		object& emplace_object(const std::string& name, CtorArgs&&... args) {
-			m_props.emplace(name, std::forward<CtorArgs>(args)...);
+			m_props.emplace<std::unique_ptr<object>>(name, std::forward<CtorArgs>(args)...);
 			return *this;
 		}
 		/**
@@ -185,8 +186,8 @@ namespace json {
 		 * @return This object that was modified.
 		 */
 		template<typename... CtorArgs>
-		object& emplace_string(CtorArgs&&... args) {
-			m_props.emplace(name, std::forward<CtorArgs>(args)...);
+		object& emplace_string(const std::string& name, CtorArgs&&... args) {
+			m_props.emplace<std::unique_ptr<string>>(name, std::forward<CtorArgs>(args)...);
 			return *this;
 		}
 		/**

@@ -1,5 +1,6 @@
 #pragma once
-#include "json.hpp"
+#include <string>
+#include "root.hpp"
 
 namespace json {
 	/**
@@ -12,7 +13,7 @@ namespace json {
 	template<typename T, typename Escape>
 	class builder {
 	protected:
-		builer(T& obj, Escape& esc) 
+		builder(T& obj, Escape& esc) 
 			: m_object(obj), m_escape(esc) { }
 		template<typename... CtorArgs>
 		builder(Escape& esc, CtorArgs&& ...args)
@@ -128,11 +129,11 @@ namespace json {
 		*/
 	public:
 		template<typename... CtorArgs>
-		obj_builder object(const std::string& name, CtorArgs&&... args) { // Cannot return by reference or else we get a dangling reference
+		obj_builder<root_builder> object(const std::string& name, CtorArgs&&... args) { // Cannot return by reference or else we get a dangling reference
 			return obj_builder<root_builder&>(*this, this->m_object->insert<object>(name, std::forward(args)...));
 		}
 		template<typename... CtorArgs>
-		array_builder array(const std::string& name, CtorArgs&&... args) { // Cannot return by reference or else we get a dangling reference
+		array_builder<root_builder> array(const std::string& name, CtorArgs&&... args) { // Cannot return by reference or else we get a dangling reference
 			return array_builder<root_builder&>(*this, this->m_object->insert<array>(name, std::forward(args)...));
 		}
 		template<typename Storage>

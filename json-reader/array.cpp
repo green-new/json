@@ -47,26 +47,27 @@ json::array& json::array::push_string(const string& str) {
 
 // Insertion with rvalues (move)
 json::array& json::array::push_array(array&& rval) {
-	m_arr.emplace_back(std::forward<array>(rval));
+	m_arr.emplace_back(std::make_unique<array>(std::forward<array>(rval)));
 	return *this;
 }
 json::array& json::array::push_boolean(boolean&& rval) {
-	m_arr.emplace_back(std::forward<boolean>(rval));
+	m_arr.emplace_back(std::make_unique<boolean>(std::forward<boolean>(rval)));
 	return *this;
 }
 json::array& json::array::push_null(null&& rval) {
-	m_arr.emplace_back(std::forward<null>(rval));
+	m_arr.emplace_back(std::make_unique<null>(std::forward<null>(rval)));
+	return *this;
 }
 json::array& json::array::push_number(number&& rval) {
-	m_arr.emplace_back(std::forward<number>(rval));
+	m_arr.emplace_back(std::make_unique<number>(std::forward<number>(rval)));
 	return *this;
 }
 json::array& json::array::push_object(object&& rval) {
-	m_arr.emplace_back(std::forward<object>(rval));
+	m_arr.emplace_back(std::make_unique<object>(std::forward<object>(rval)));
 	return *this;
 }
 json::array& json::array::push_string(string&& rval) {
-	m_arr.emplace_back(std::forward<string>(rval));
+	m_arr.emplace_back(std::make_unique<string>(std::forward<string>(rval)));
 	return *this;
 }
 
