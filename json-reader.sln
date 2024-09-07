@@ -5,6 +5,8 @@ VisualStudioVersion = 17.8.34330.188
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "json-reader", "json-reader\json-reader.vcxproj", "{172DA797-BE71-42EB-8D4F-377F4C861A91}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "unit-test", "unit-test\unit-test.vcxproj", "{58659B27-136F-45D0-AF76-8AC09A5D30E1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +23,14 @@ Global
 		{172DA797-BE71-42EB-8D4F-377F4C861A91}.Release|x64.Build.0 = Release|x64
 		{172DA797-BE71-42EB-8D4F-377F4C861A91}.Release|x86.ActiveCfg = Release|Win32
 		{172DA797-BE71-42EB-8D4F-377F4C861A91}.Release|x86.Build.0 = Release|Win32
+		{58659B27-136F-45D0-AF76-8AC09A5D30E1}.Debug|x64.ActiveCfg = Debug|x64
+		{58659B27-136F-45D0-AF76-8AC09A5D30E1}.Debug|x64.Build.0 = Debug|x64
+		{58659B27-136F-45D0-AF76-8AC09A5D30E1}.Debug|x86.ActiveCfg = Debug|Win32
+		{58659B27-136F-45D0-AF76-8AC09A5D30E1}.Debug|x86.Build.0 = Debug|Win32
+		{58659B27-136F-45D0-AF76-8AC09A5D30E1}.Release|x64.ActiveCfg = Release|x64
+		{58659B27-136F-45D0-AF76-8AC09A5D30E1}.Release|x64.Build.0 = Release|x64
+		{58659B27-136F-45D0-AF76-8AC09A5D30E1}.Release|x86.ActiveCfg = Release|Win32
+		{58659B27-136F-45D0-AF76-8AC09A5D30E1}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

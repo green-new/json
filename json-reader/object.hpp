@@ -66,6 +66,20 @@ namespace json {
 		* @return True if empty, false if non-empty.
 		*/
 		bool empty() const noexcept;
+		/**
+		 * @brief Determines if this and another object are equal by contents.
+		 * 
+		 * @param rhs The other object.
+		 * @return True if equal, false if not.
+		 */
+		bool operator==(const object& rhs) const;
+		/**
+		 * @brief Determines if this object contains the given key/name.
+		 * 
+		 * @param name The name of the JSON value.
+		 * @return True if this object contains this key, false if not.
+		 */
+		bool contains(const std::string& name) const;
 	public:
 		/**
 		 * @brief Inserts a JSON value type 'array' into this object by copy.
@@ -263,6 +277,18 @@ namespace json {
 		*/
 		virtual object* clone_impl() const override {
 			return new object(*this);
+		}
+		/**
+		 * @brief Equals implementation.
+		 *
+		 * @param rhs The other value.
+		 * @return True if the value is equal in type and lexiographically, false otherwise.
+		 */
+		virtual bool equals(value* rhs) const override {
+			if (auto rhsobj = dynamic_cast<object*>(rhs)) {
+				return rhsobj->m_props == m_props;
+			}
+			return false;
 		}
 	public:
 		/**

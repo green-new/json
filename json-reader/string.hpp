@@ -10,13 +10,7 @@ namespace json {
 	* @brief Contains a string. Strings are arrays of 1-byte (char) values. Strings can be empty.
 	*/
 	class string final : public value {
-		/**
-		* Class methods.
-		*/
 	public:
-		/*
-		* @brief Default initializes m_string to an empty string "".
-		*/
 		string()
 			: m_string() {}
 		string(const std::string& str)
@@ -26,17 +20,33 @@ namespace json {
 		std::string& str();
 	public:
 		/*
-		* @copydoc json::value::to_string
+		* @brief Get the string representation of this string.
+		* 
+		* @return The string.
 		*/
 		virtual std::string to_string() const override {
 			return std::format("\"{}\"", m_string);
 		}
 	protected:
 		/*
-		* @copydocs json::value::clone_impl
+		* @brief Clone implementation.
+		* 
+		* @return Copy of this string, raw pointer.
 		*/
 		virtual string* clone_impl() const override {
 			return new string(*this);
+		}
+		/**
+		 * @brief Equals implementation.
+		 * 
+		 * @param rhs The other value.
+		 * @return True if the value is equal in type and lexiographically, false otherwise.
+		 */
+		virtual bool equals(value* rhs) const override {
+			if (auto rhsstr = dynamic_cast<string*>(rhs)) {
+				return rhsstr->m_string == m_string;
+			}
+			return false;
 		}
 	private:
 		std::string m_string{};

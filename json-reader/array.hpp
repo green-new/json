@@ -1,9 +1,11 @@
 #pragma once
 
 #include "boolean.hpp"
+#include <concepts>
 #include "iterable.hpp"
 #include "null.hpp"
 #include "number.hpp"
+#include <set>
 #include "string.hpp"
 #include <sstream>
 #include <utility>
@@ -85,211 +87,139 @@ namespace json {
 		inline array_container::value_type* data() noexcept;
 	public:
 		/**
-		 * @brief Pushes a JSON value type 'array' into the end of this array by copy.
-		 * 
-		 * @param arr The array to push.
-		 * @return This array that was modified.
-		 */
-		array& push_array(const array& arr);
-		/**
-		 * @brief Pushes a JSON value type 'array' into the end of this array by move.
+		 * @brief Copies and pushes a JSON value into the end of this array.
 		 *
-		 * @param rval Rvalue reference to the 'array' (will be moved).
-		 * @return This array that was modified.
+		 * @tparam JsonValueType The type of the JSON value to copy and push to the end of the array.
+		 * @param value The value to copy.
+		 * @return This array.
 		 */
-		array& push_array(array&& rval);
-		/**
-		 * @brief Emplaces a JSON value type 'array' with the ctor args.
-		 *
-		 * @param arr The array to push.
-		 * @return This array that was modified.
-		 */
-		template<typename... CtorArgs>
-		array& emplace_array(CtorArgs&&... args) {
-			m_arr.emplace_back<std::unique_ptr<array>>(std::forward(args)...);
+		template<std::derived_from<value> JsonValueType>
+		array& push(const JsonValueType& value) {
+			m_arr.push_back(std::make_unique<JsonValueType>(value)); // Copy ctor
 			return *this;
 		}
 		/**
-		 * @brief Pushes a JSON value type 'boolean' into the end of this array by copy.
+		 * @brief Moves and pushes a JSON value into the end of this array.
 		 *
-		 * @param arr The array to push.
-		 * @return This array that was modified.
+		 * @tparam JsonValueType The type of the JSON value to move and push to the end of the array.
+		 * @param value The value to copy.
+		 * @return This array.
 		 */
-		array& push_boolean(const boolean& b);
-		/**
-		 * @brief Pushes a JSON value type 'boolean' into the end of this array by move.
-		 *
-		 * @param rval Rvalue reference to the 'boolean' (will be moved).
-		 * @return This array that was modified.
-		 */
-		array& push_boolean(boolean&& rval);
-		/**
-		 * @brief Emplaces a JSON value type 'boolean' with the ctor args.
-		 *
-		 * @param arr The array to push.
-		 * @return This array that was modified.
-		 */
-		template<typename... CtorArgs>
-		array& emplace_boolean(CtorArgs&&... args) {
-			m_arr.emplace_back<std::unique_ptr<boolean>>(std::forward(args)...);
+		template<std::derived_from<value> JsonValueType>
+		array& push(JsonValueType&& value) {
+			m_arr.push_back(std::make_unique<JsonValueType>(std::forward(value))); // Move ctor
 			return *this;
 		}
 		/**
-		 * @brief Pushes a JSON value type 'null' into the end of this array by copy.
+		 * @brief Creates and pushes in-place a JSON value into the end of this array.
 		 *
-		 * @param arr The array to push.
-		 * @return This array that was modified.
+		 * @tparam JsonValueType The type of the JSON value to move and push to the end of the array.
+		 * @tparam CtorArgs The list of constructor argument types for the JsonValueType.
+		 * @param value The value to copy.
+		 * @return This array.
 		 */
-		array& push_null(const null& n);
-		/**
-		 * @brief Pushes a JSON value type 'null' into the end of this array by move.
-		 *
-		 * @param rval Rvalue reference to the 'null' (will be moved).
-		 * @return This array that was modified.
-		 */
-		array& push_null(null&& rval);
-		/**
-		 * @brief Emplaces a JSON value type 'boolean' with the ctor args.
-		 *
-		 * @param arr The array to push.
-		 * @return This array that was modified.
-		 */
-		array& emplace_null() {
-			m_arr.emplace_back<std::unique_ptr<null>>({});
-			return *this;
-		}
-		/**
-		 * @brief Pushes a JSON value type 'number' into the end of this array by copy.
-		 *
-		 * @param arr The array to push.
-		 * @return This array that was modified.
-		 */
-		array& push_number(const number& num);
-		/**
-		 * @brief Pushes a JSON value type 'number' into the end of this array by move.
-		 *
-		 * @param rval Rvalue reference to the 'number' (will be moved).
-		 * @return This array that was modified.
-		 */
-		array& push_number(number&& rval);
-		/**
-		 * @brief Emplaces a JSON value type 'number' with the ctor args.
-		 *
-		 * @param arr The array to push.
-		 * @return This array that was modified.
-		 */
-		template<typename... CtorArgs>
-		array& emplace_number(CtorArgs&&... args) {
-			m_arr.emplace_back<std::unique_ptr<number>>(std::forward(args)...);
-			return *this;
-		}
-		/**
-		 * @brief Pushes a JSON value type 'object' into the end of this array by copy.
-		 *
-		 * @param arr The array to push.
-		 * @return This array that was modified.
-		 */
-		array& push_object(const object& obj);
-		/**
-		 * @brief Pushes a JSON value type 'object' into the end of this array by move.
-		 *
-		 * @param rval Rvalue reference to the 'object' (will be moved).
-		 * @return This array that was modified.
-		 */
-		array& push_object(object&& rval);
-		/**
-		 * @brief Emplaces a JSON value type 'object' with the ctor args.
-		 *
-		 * @param arr The array to push.
-		 * @return This array that was modified.
-		 */
-		template<typename... CtorArgs>
-		array& emplace_object(CtorArgs&&... args) {
-			m_arr.emplace_back<std::unique_ptr<object>>(std::forward(args)...);
-			return *this;
-		}
-		/**
-		 * @brief Pushes a JSON value type 'string' into the end of this array by copy.
-		 *
-		 * @param arr The array to push.
-		 * @return This array that was modified.
-		 */
-		array& push_string(const string& str);
-		/**
-		 * @brief Pushes a JSON value type 'string' into the end of this array by move.
-		 * 
-		 * @param rval Rvalue reference to the 'string' (will be moved).
-		 * @return This array that was modified.
-		 */
-		array& push_string(string&& rval);
-		/**
-		 * @brief Emplaces a JSON value type 'string' with the ctor args.
-		 *
-		 * @param arr The array to push.
-		 * @return This array that was modified.
-		 */
-		template<typename... CtorArgs>
-		array& emplace_string(CtorArgs&&... args) {
-			m_arr.emplace_back<std::unique_ptr<string>>(std::forward(args)...);
+		template<std::derived_from<value> JsonValueType, typename... CtorArgs>
+			requires std::constructible_from<JsonValueType, CtorArgs...>
+		array& emplace(JsonValueType&& value) {
+			m_arr.push_back(std::make_unique<JsonValueType>(std::forward(CtorArgs)...);
 			return *this;
 		}
 		/*
-		* @brief Removes the last element from the array.
-		*/
+		 * @brief Removes the last element from the array.
+		 */
 		void pop() noexcept;
 		/*
-		* @brief Clears the array.
-		*/
+		 * @brief Clears the array.
+		 */
 		void clear() noexcept;
+		/**
+		 * @brief Search the array for the provided value by contents.
+		 * 
+		 * @param json_value The json value, type erased.
+		 * @return The iterator position of the element found, end() otherwise.
+		 */
+		iterator find(const value& json_value);
+		/**
+		 * @brief Gets a set of the references to elements in the array of type JsonValueType.
+		 * 
+		 * @tparam JsonValueType The type of the JSON value references to retrieve.
+		 * @return The set of JSON values of the provided JSON value type.
+		 */
+		template<std::derived_from<value> JsonValueType>
+		std::set<std::reference_wrapper<JsonValueType>> of() {
+			std::set<std::reference_wrapper<JsonValueType>> res{};
+			for (const_iterator it = cbegin(); it != cend(); it++) {
+				if (JsonValueType& ref = dynamic_cast<JsonValueType&>(*it)) {
+					res.insert(std::ref(ref));
+				}
+			}
+			return res;
+		}
 		/*
-		* @brief Erases the element at the provided iterator.
-		* @param pos The position of the element to erase.
-		* @returns The iterator following the deleted element.
-		*/
+		 * @brief Erases the element at the provided iterator.
+		 * @param pos The position of the element to erase.
+		 * @returns The iterator following the deleted element.
+		 */
 		constexpr iterator erase(iterator pos) noexcept;
 		/*
-		* @brief Erases the element at the provided const iterator.
-		* This function is marked constexpr.
-		* @param pos The const iterator.
-		* @returns The iterator following the deleted element.
-		*/
+		 * @brief Erases the element at the provided const iterator.
+		 * This function is marked constexpr.
+		 * @param pos The const iterator.
+		 * @returns The iterator following the deleted element.
+		 */
 		constexpr iterator erase(const_iterator pos) noexcept;
 		/*
-		* @brief Erases the elements in the provided iterator range.
-		* @param first The first iterator.
-		* @param last The last iterator.
-		* @returns The iterator following the last deleted element.
-		*/
+		 * @brief Erases the elements in the provided iterator range.
+		 * @param first The first iterator.
+		 * @param last The last iterator.
+		 * @returns The iterator following the last deleted element.
+		 */
 		constexpr iterator erase(iterator first, iterator last) noexcept;
 		/*
-		* @brief Erases the elements in the provided const iterator range.
-		* @param first The first const iterator.
-		* @param second The second const iterator.
-		* @returns The iterator following the last deleted element.
-		*/
+		 * @brief Erases the elements in the provided const iterator range.
+		 * @param first The first const iterator.
+		 * @param second The second const iterator.
+		 * @returns The iterator following the last deleted element.
+		 */
 		constexpr iterator erase(const_iterator first, const_iterator last) noexcept;
 	public:
 		/*
-		* @brief Gets the size of the array.
-		* @returns The size of this array.
-		*/
+		 * @brief Gets the size of the array.
+		 * @returns The size of this array.
+		 */
 		size_t size() const noexcept;
 		/*
-		* @brief Gets if this array is empty or not.
-		* @returns True/false if this array is empty or not.
-		*/
+		 * @brief Gets if this array is empty or not.
+		 * @returns True/false if this array is empty or not.
+		 */
 		bool is_empty() const noexcept;
 	protected:
 		/*
-		* @copydoc value::clone_impl
-		*/
+		 * @brief Clone implementation
+		 * 
+		 * @return Raw pointer deep copy of this array.
+		 */
 		virtual array* clone_impl() const override {
 			return new array(*this);
 		}
+		/**
+		 * @brief Equals implementation.
+		 *
+		 * @param rhs The other value.
+		 * @return True if the value is equal in type and lexiographically, false otherwise.
+		 */
+		virtual bool equals(value* rhs) const override {
+			if (auto rhsarr = dynamic_cast<array*>(rhs)) {
+				return rhsarr->m_arr == m_arr;
+			}
+			return false;
+		}
 	public:
 		/*
-		* @copydoc json::value::to_string
-		*/
+		 * @brief String representation of this array.
+		 * 
+		 * @return String representation.
+		 */
 		std::string to_string() const override {
 			std::ostringstream ss;
 			ss << '[';
@@ -327,8 +257,8 @@ namespace json {
 		}
 	private:
 		/*
-		* @brief Internal array element container. Every element is a valid non-'nullptr' element - although it could be a json::null.
-		*/
+		 * @brief Internal array element container. Every element is a valid non-'nullptr' element - although it could be a json::null.
+		 */
 		array_container m_arr{};
 };
 }

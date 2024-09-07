@@ -18,57 +18,8 @@ inline json::value& json::array::back() noexcept {
 inline json::array_container::value_type* json::array::data() noexcept {
 	return m_arr.data();
 }
-
-// Insertion with lvalues (copy)
-json::array& json::array::push_array(const array& arr) {
-	m_arr.push_back(std::make_unique<array>(arr));
-	return *this;
-}
-json::array& json::array::push_boolean(const boolean& b) {
-	m_arr.push_back(std::make_unique<boolean>(b));
-	return *this;
-}
-json::array& json::array::push_null(const null& n) {
-	m_arr.push_back(std::make_unique<null>(n));
-	return *this;
-}
-json::array& json::array::push_number(const number& num) {
-	m_arr.push_back(std::make_unique<number>(num));
-	return *this;
-}
-json::array& json::array::push_object(const object& obj) {
-	m_arr.push_back(std::make_unique<object>(obj));
-	return *this;
-}
-json::array& json::array::push_string(const string& str) {
-	m_arr.push_back(std::make_unique<string>(str));
-	return *this;
-}
-
-// Insertion with rvalues (move)
-json::array& json::array::push_array(array&& rval) {
-	m_arr.emplace_back(std::make_unique<array>(std::forward<array>(rval)));
-	return *this;
-}
-json::array& json::array::push_boolean(boolean&& rval) {
-	m_arr.emplace_back(std::make_unique<boolean>(std::forward<boolean>(rval)));
-	return *this;
-}
-json::array& json::array::push_null(null&& rval) {
-	m_arr.emplace_back(std::make_unique<null>(std::forward<null>(rval)));
-	return *this;
-}
-json::array& json::array::push_number(number&& rval) {
-	m_arr.emplace_back(std::make_unique<number>(std::forward<number>(rval)));
-	return *this;
-}
-json::array& json::array::push_object(object&& rval) {
-	m_arr.emplace_back(std::make_unique<object>(std::forward<object>(rval)));
-	return *this;
-}
-json::array& json::array::push_string(string&& rval) {
-	m_arr.emplace_back(std::make_unique<string>(std::forward<string>(rval)));
-	return *this;
+json::array::iterator json::array::find(const json::value& json_value) {
+	return std::find(begin(), end(), json_value);
 }
 
 // Modifiers

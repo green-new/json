@@ -45,6 +45,18 @@ namespace json {
 		boolean* clone_impl() const override {
 			return new boolean(*this);
 		}
+		/**
+		 * @brief Equals implementation.
+		 *
+		 * @param rhs The other value.
+		 * @return True if the value is equal in type and lexiographically, false otherwise.
+		 */
+		virtual bool equals(value* rhs) const override {
+			if (auto rhsbool = dynamic_cast<boolean*>(rhs)) {
+				return rhsbool->m_boolean == m_boolean;
+			}
+			return false;
+		}
 	private:
 		bool m_boolean;
 	};
