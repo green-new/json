@@ -16,7 +16,7 @@ public:
 		"In compilation of the translation unit 'json.hpp', \
 		in namespace 'json', class 'json::number', \
 		type alias 'number_type': said alias requires a floating \
-		point type of double precision, which the current \
+		point type specified by the IEEE 754-2008 standard, which the current \
 		system cannot provide or support");
 	number() = delete;
 	number(number_type num)
@@ -78,14 +78,16 @@ public:
 	inline bool is_normal() noexcept;
 public:
 	/*
-	* @copydoc json::value::clone_impl
+	* @brief Get the string representation of this 'number'.
+	* @return String representation.
 	*/
 	std::string to_string() const override {
 		return std::format("{}", m_number);
 	}
 protected:
 	/*
-	* @copydoc json::value::to_string
+	* @brief Clone implementation.
+	* @return Raw pointer deep copy of this number.
 	*/
 	virtual number* clone_impl() const override {
 		return new number(*this);

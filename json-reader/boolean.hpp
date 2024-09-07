@@ -16,19 +16,29 @@ public:
 		: m_boolean(val) {}
 	~boolean() = default;
 public:
-	operator bool() const;
+	/**
+	 * @brief Bool conversion operator.
+	 * @return Boolean value.
+	 */
+	explicit operator bool() const;
 public:
+	/**
+	 * @brief Set the boolean value.
+	 * @param val The value to set it to.
+	 */
 	void set(bool val);
 public:
 	/*
-	* @copydoc json::value::to_string
+	* @brief Get the string representation.
+	* @return "true"/"false".
 	*/
 	std::string to_string() const override {
 		return m_boolean ? "true" : "false";
 	}
 protected:
 	/*
-	* @copydoc value::clone_impl
+	* @brief Clone this object.
+	* @return Raw pointer deep copy of this object.
 	*/
 	boolean* clone_impl() const override {
 		return new boolean(*this);
