@@ -19,12 +19,14 @@ inline json::array_container::value_type* json::array::data() noexcept {
 	return m_arr.data();
 }
 json::array::iterator json::array::find(const json::value& json_value) {
-	return std::find(begin(), end(), json_value);
+	return std::find_if(begin(), end(), [&](value_ptr& p) { return *p.get() == json_value; });
 }
 
 // Modifiers
-void json::array::pop() noexcept {
+json::value_ptr json::array::pop() noexcept {
+	value_ptr temp = std::unique_ptr(std::move(m_arr.back()));
 	m_arr.pop_back();
+	return temp; // RVO; will be moved
 }
 void json::array::clear() noexcept {
 	m_arr.clear();
@@ -46,6 +48,6 @@ constexpr json::array::iterator json::array::erase(const_iterator first, const_i
 size_t json::array::size() const noexcept {
 	return m_arr.size();
 }
-bool json::array::is_empty() const noexcept {
+bool json::array::empty() const noexcept {
 	return m_arr.empty();
 }

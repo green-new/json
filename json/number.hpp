@@ -64,20 +64,20 @@ namespace json {
 		* This functions returns true if this number is finite, false if infinite.
 		* @return Boolean representing if this number is finite or infinite.
 		*/
-		inline bool is_finite() noexcept;
+		inline bool is_finite() const noexcept;
 		/**
 		* @brief Determines if the current number is NaN using the stdlib.
 		* This functions returns true if this number is NaN, false if its normal.
 		* @return Boolean representing if this number is NaN or normal.
 		*/
-		inline bool is_nan() noexcept;
+		inline bool is_nan() const noexcept;
 		/*
 		* @brief Determines if the current number is normal.
 		* This function returns @c true if this number is normal, @c false if not.
 		* This function is marked noexcept.
 		* @return Boolean true/false if this number is normal or not.
 		*/
-		inline bool is_normal() noexcept;
+		inline bool is_normal() const noexcept;
 	public:
 		/*
 		* @brief Get the string representation of this 'number'.
@@ -100,8 +100,8 @@ namespace json {
 		 * @param rhs The other value.
 		 * @return True if the value is equal in type and lexiographically, false otherwise.
 		 */
-		virtual bool equals(value* rhs) const override {
-			if (auto rhsnum = dynamic_cast<number*>(rhs)) {
+		virtual bool equals(const value* rhs) const override {
+			if (const auto rhsnum = dynamic_cast<const number*>(rhs)) {
 				return rhsnum->m_number == m_number;
 			}
 			return false;

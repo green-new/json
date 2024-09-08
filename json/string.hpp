@@ -21,7 +21,7 @@ namespace json {
 	public:
 		/*
 		* @brief Get the string representation of this string.
-		* 
+		*
 		* @return The string.
 		*/
 		virtual std::string to_string() const override {
@@ -30,7 +30,7 @@ namespace json {
 	protected:
 		/*
 		* @brief Clone implementation.
-		* 
+		*
 		* @return Copy of this string, raw pointer.
 		*/
 		virtual string* clone_impl() const override {
@@ -38,12 +38,12 @@ namespace json {
 		}
 		/**
 		 * @brief Equals implementation.
-		 * 
+		 *
 		 * @param rhs The other value.
 		 * @return True if the value is equal in type and lexiographically, false otherwise.
 		 */
-		virtual bool equals(value* rhs) const override {
-			if (auto rhsstr = dynamic_cast<string*>(rhs)) {
+		virtual bool equals(const value* rhs) const override {
+			if (const auto rhsstr = dynamic_cast<const string*>(rhs)) {
 				return rhsstr->m_string == m_string;
 			}
 			return false;

@@ -32,19 +32,13 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="strmanip.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="builder.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="iterable.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="array.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="boolean.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="iterable.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="null.hpp">
@@ -62,11 +56,11 @@
     <ClInclude Include="string.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="strmanip.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="value.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="example.json" />
   </ItemGroup>
 </Project>

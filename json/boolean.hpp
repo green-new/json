@@ -51,8 +51,8 @@ namespace json {
 		 * @param rhs The other value.
 		 * @return True if the value is equal in type and lexiographically, false otherwise.
 		 */
-		virtual bool equals(value* rhs) const override {
-			if (auto rhsbool = dynamic_cast<boolean*>(rhs)) {
+		virtual bool equals(const value* rhs) const override {
+			if (const auto rhsbool = dynamic_cast<const boolean*>(rhs)) {
 				return rhsbool->m_boolean == m_boolean;
 			}
 			return false;

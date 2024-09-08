@@ -23,7 +23,7 @@ namespace json {
 	protected:
 		/**
 		 * @brief Clone this null object.
-		 * 
+		 *
 		 * @return Raw pointer deep copy of this object.
 		 */
 		virtual null* clone_impl() const override {
@@ -35,7 +35,7 @@ namespace json {
 		 * @param rhs The other value.
 		 * @return Always returns true.
 		 */
-		virtual bool equals(value* rhs) const override {
+		virtual bool equals(const value* rhs) const override {
 			return true;
 		}
 	};

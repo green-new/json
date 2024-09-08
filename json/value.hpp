@@ -17,24 +17,21 @@ namespace json {
 	public:
 		/*
 		 * @brief Returns this object as a string.
-		 * 
+		 *
 		 * @return The string representation of this JSON value.
 		 */
 		virtual std::string to_string() const = 0;
 		/*
 		 * @brief Clones this value by calling the clone implementation.
-		 * 
+		 *
 		 * @return Copy of the object, raw pointer.
 		 */
 		auto clone() const {
 			return std::unique_ptr<value>(clone_impl());
 		}
-		/*
-		 * @brief Calls the implementation if the provided value ptr is equal in terms of content.
-		 *
-		 * @return True if equal, false if not.
-		 */
-		virtual bool equals(value* val) const = 0;
+		bool operator==(const value& val) const {
+			return equals(&val);
+		}
 		/*
 		 * @brief Output stream free method.
 		 * @param os The output stream.
@@ -54,6 +51,12 @@ namespace json {
 		 * @returns A value pointer to a deep copy of this value.
 		 */
 		virtual value* clone_impl() const = 0;
+		/*
+		 * @brief Calls the implementation if the provided value ptr is equal in terms of content.
+		 *
+		 * @return True if equal, false if not.
+		 */
+		virtual bool equals(const value* val) const = 0;
 	};
 
 	/**
@@ -61,7 +64,7 @@ namespace json {
 	 */
 	using value_ptr = std::unique_ptr<value>;
 
-	/** 
+	/**
 	 * @brief Type alias for value pointers that are unowning.
 	 */
 	using value_sptr = std::shared_ptr<value>;

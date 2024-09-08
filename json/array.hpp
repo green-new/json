@@ -5,6 +5,7 @@
 #include "iterable.hpp"
 #include "null.hpp"
 #include "number.hpp"
+#include "object.hpp"
 #include <set>
 #include "string.hpp"
 #include <sstream>
@@ -14,9 +15,6 @@
 namespace json {
 	// Array container type (owning)
 	using array_container = std::vector<value_ptr>;
-
-	// 'object' forward declaration
-	class object;
 
 	/**
 	* @class json::array
@@ -48,7 +46,7 @@ namespace json {
 		}
 		array& operator=(array&& other) noexcept {
 			if (this != &other) {
-				*this = array(other);
+				*this = array(std::forward<array>(other));
 			}
 			return *this;
 		}
@@ -107,7 +105,7 @@ namespace json {
 		 */
 		template<std::derived_from<value> JsonValueType>
 		array& push(JsonValueType&& value) {
-			m_arr.push_back(std::make_unique<JsonValueType>(std::forward(value))); // Move ctor
+			m_arr.push_back(std::make_unique<JsonValueType>(std::forward<JsonValueType>(value))); // Move ctor
 			return *this;
 		}
 		/**
@@ -120,28 +118,46 @@ namespace json {
 		 */
 		template<std::derived_from<value> JsonValueType, typename... CtorArgs>
 			requires std::constructible_from<JsonValueType, CtorArgs...>
-		array& emplace(JsonValueType&& value) {
-			m_arr.push_back(std::make_unique<JsonValueType>(std::forward(CtorArgs)...);
+		array& emplace(JsonValueType&& value, CtorArgs&&... args) {
+			m_arr.push_back(std::make_unique<JsonValueType>(std::forward(args)...));
 			return *this;
 		}
 		/*
-		 * @brief Removes the last element from the array.
+		 * @brief Removes the last element in the array and returns it.
+		 *
+		 * @return Last element in the array.
 		 */
-		void pop() noexcept;
+		value_ptr pop() noexcept;
 		/*
 		 * @brief Clears the array.
 		 */
 		void clear() noexcept;
 		/**
 		 * @brief Search the array for the provided value by contents.
-		 * 
+		 *
 		 * @param json_value The json value, type erased.
 		 * @return The iterator position of the element found, end() otherwise.
 		 */
 		iterator find(const value& json_value);
 		/**
+		 * @brief Search the array based on the provided predicate.
+		 *
+		 * @param predicate The predicate.
+		 * @return The iterator position of the first element found if the predicate is valid, end() otherwise.
+		 */
+		template<std::predicate<const value&, size_t> Predicate>
+		iterator find_if(Predicate predicate) {
+			size_t i = 0;
+			for (const_iterator it = cbegin(); it != cend(); it++) {
+				if (Predicate(*it, i++)) {
+					return it;
+				}
+			}
+			return end();
+		}
+		/**
 		 * @brief Gets a set of the references to elements in the array of type JsonValueType.
-		 * 
+		 *
 		 * @tparam JsonValueType The type of the JSON value references to retrieve.
 		 * @return The set of JSON values of the provided JSON value type.
 		 */
@@ -192,11 +208,11 @@ namespace json {
 		 * @brief Gets if this array is empty or not.
 		 * @returns True/false if this array is empty or not.
 		 */
-		bool is_empty() const noexcept;
+		bool empty() const noexcept;
 	protected:
 		/*
 		 * @brief Clone implementation
-		 * 
+		 *
 		 * @return Raw pointer deep copy of this array.
 		 */
 		virtual array* clone_impl() const override {
@@ -208,8 +224,8 @@ namespace json {
 		 * @param rhs The other value.
 		 * @return True if the value is equal in type and lexiographically, false otherwise.
 		 */
-		virtual bool equals(value* rhs) const override {
-			if (auto rhsarr = dynamic_cast<array*>(rhs)) {
+		virtual bool equals(const value* rhs) const override {
+			if (const auto rhsarr = dynamic_cast<const array*>(rhs)) {
 				return rhsarr->m_arr == m_arr;
 			}
 			return false;
@@ -217,7 +233,7 @@ namespace json {
 	public:
 		/*
 		 * @brief String representation of this array.
-		 * 
+		 *
 		 * @return String representation.
 		 */
 		std::string to_string() const override {
@@ -260,5 +276,5 @@ namespace json {
 		 * @brief Internal array element container. Every element is a valid non-'nullptr' element - although it could be a json::null.
 		 */
 		array_container m_arr{};
-};
+	};
 }

@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34330.188
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "json", "json\json.vcxproj", "{BF105CFA-7716-401D-8C43-CD7F476EFE3E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BF105CFA-7716-401D-8C43-CD7F476EFE3E}.Debug|x64.ActiveCfg = Debug|x64
+		{BF105CFA-7716-401D-8C43-CD7F476EFE3E}.Debug|x64.Build.0 = Debug|x64
+		{BF105CFA-7716-401D-8C43-CD7F476EFE3E}.Debug|x86.ActiveCfg = Debug|Win32
+		{BF105CFA-7716-401D-8C43-CD7F476EFE3E}.Debug|x86.Build.0 = Debug|Win32
+		{BF105CFA-7716-401D-8C43-CD7F476EFE3E}.Release|x64.ActiveCfg = Release|x64
+		{BF105CFA-7716-401D-8C43-CD7F476EFE3E}.Release|x64.Build.0 = Release|x64
+		{BF105CFA-7716-401D-8C43-CD7F476EFE3E}.Release|x86.ActiveCfg = Release|Win32
+		{BF105CFA-7716-401D-8C43-CD7F476EFE3E}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {730960A3-E4BE-4A22-BF05-4335A9D7B945}
+	EndGlobalSection
+EndGlobal
