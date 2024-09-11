@@ -29,13 +29,34 @@ namespace json {
 		auto clone() const {
 			return std::unique_ptr<value>(clone_impl());
 		}
+		/**
+		 * @brief Equality operator. Calls the 'equals' implementation.
+		 * 
+		 * @return true/false, if val is equal to this value by content, determined by 'equals' implementation.
+		 */
 		bool operator==(const value& val) const {
-			return equals(&val);
+			return eq_impl(&val);
+		}
+		/**
+		 * @brief Less than operator. Calls the 'lt' implementation.
+		 * 
+		 * @return true/false, if val is less than to this value by content, determined by 'lt' implementation.
+		 */
+		bool operator<(const value& val) const {
+			return lt_impl(&val);
+		}
+		/**
+		 * @brief Greater than operator. Calls the 'gt' implementation.
+		 * 
+		 * @return true/false, if val is less than to this value by content, determined by 'gt' implementation.
+		 */
+		bool operator<(const value& val) const {
+			return gt_impl(&val);
 		}
 		/*
-		 * @brief Output stream free method.
+		 * @brief Output stream method.
 		 * @param os The output stream.
-		 * @param val The value to print to output stream.
+		 * @param val The value to output to output stream.
 		 */
 		friend std::ostream& operator<<(std::ostream& os, const value& val) {
 			os << val.to_string();
@@ -52,11 +73,23 @@ namespace json {
 		 */
 		virtual value* clone_impl() const = 0;
 		/*
-		 * @brief Calls the implementation if the provided value ptr is equal in terms of content.
-		 *
+		 * @brief Determines if the provided value is equal in terms of content.
+		 * Implementation dependent.
 		 * @return True if equal, false if not.
 		 */
-		virtual bool equals(const value* val) const = 0;
+		virtual bool eq_impl(const value* val) const = 0;
+		/*
+		 * @brief Determines if the provided value is less than in terms of content.
+		 * Implementation dependent.
+		 * @return True if equal, false if not.
+		 */
+		virtual bool lt_impl(const value* val) const = 0;
+		/*
+		 * @brief Determines if the provided value is greater than in terms of content.
+		 * Implementation dependent.
+		 * @return True if equal, false if not.
+		 */
+		virtual bool gt_impl(const value* val) const = 0;
 	};
 
 	/**

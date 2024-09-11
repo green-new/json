@@ -19,7 +19,7 @@ namespace json {
 	 * Values cannot be nullptr.
 	 * Duplicate named members follow the same rules as the standard library's @c std::map::insert.
 	 */
-	class object final : public value, public iterable<prop_map> {
+	class object : public value, public iterable<prop_map> {
 	public:
 		object()
 			: m_props() {}
@@ -123,6 +123,13 @@ namespace json {
 			m_props.try_emplace(name, std::forward(args)...); // Ctor
 			return *this;
 		}
+		/**
+		 * @brief Retrieve a JSON value of type JsonValueType from the object based on name.
+		 *
+		 * @tparam JsonValueType Template restricted by derived_from equivalent to the JSON value type.
+		 * @param name The name of the JSON value in this object.
+		 * @return Reference to the JSON value in this object.
+		 */
 		template<std::derived_from<value> JsonValueType>
 		JsonValueType& get(const std::string& name) {
 			return dynamic_cast<JsonValueType&>(*(m_props.at(name).get()));
@@ -158,11 +165,31 @@ namespace json {
 		 * @param rhs The other value.
 		 * @return True if the value is equal in type and lexiographically, false otherwise.
 		 */
-		virtual bool equals(const value* rhs) const override {
+		virtual bool eq_impl(const value* rhs) const override {
 			if (const auto rhsobj = dynamic_cast<const object*>(rhs)) {
-				return rhsobj->m_props == m_props;
+				bool f = true;
+				for (const auto& thisit = cbegin(), rhsit = rhs.cbegin(); thisit < cend() && rhsit < cend(); thisit++, rhsit++) {
+					f = f && (p.first > 
+				}
 			}
 			return false;
+		/*
+		 * @brief Determines if the provided value is less than in terms of content.
+		 * Implementation dependent.
+		 * @return True if equal, false if not.
+		 */
+		virtual bool lt_impl(const value* val) const override {
+			if (const auto rhsobj = dynamic_cast<const number*>(rhs)) {
+				return m_number < rhsnum->m_number;
+			}
+			return false;
+		}
+		/*
+		 * @brief Determines if the provided value is greater than in terms of content.
+		 * Implementation dependent.
+		 * @return True if equal, false if not.
+		 */
+		virtual bool gt_impl(const value* val) const = 0;
 		}
 	public:
 		/**

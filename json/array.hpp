@@ -179,12 +179,12 @@ namespace json {
 		 * @return The set of JSON values of the provided JSON value type.
 		 */
 		template<std::derived_from<value> JsonValueType>
-		std::set<std::reference_wrapper<JsonValueType>> of() {
-			std::set<std::reference_wrapper<JsonValueType>> res{};
+		std::set<JsonValueType> of() {
+			std::set<JsonValueType> res{};
 			for (const_iterator it = cbegin(); it != cend(); it++) {
 				try {
 					JsonValueType& ref = dynamic_cast<JsonValueType&>(**it);
-					res.insert(std::ref<JsonValueType>(ref));
+					res.insert(ref);
 				} catch (const std::bad_cast& e) {
 					throw e;
 				}
@@ -218,6 +218,25 @@ namespace json {
 		 * @returns The iterator following the last deleted element.
 		 */
 		constexpr iterator erase(const_iterator first, const_iterator last) noexcept;
+		/*
+		 * @brief Cast the provided value pointer to a reference of the provided JSON value type.
+		 * 
+		 * @throws std::bad_cast if the provided ptr cannot be cast to the provided type.
+		 * @tparam JsonValueType Type of the JSON value.
+		 * @param ptr Value pointer to the JSON value.
+		 * @return Reference to the casted type.
+		 */
+		template<std::derived_from<value> JsonValueType>
+		static JsonValueType& deref(array_container::value_type& ptr) const {
+			JsonValueType* o;
+			try {
+				// value_ptr -> value* -> cast to JsonValueType* -> set to o
+				o = dynamic_cast<JsonValueType*>(ptr.get());
+			} catch (const std::bad_cast& e ) {
+				throw e;
+			}
+			return *o;
+		}
 	public:
 		/*
 		 * @brief Gets the size of the array.
@@ -244,7 +263,7 @@ namespace json {
 		 * @param rhs The other value.
 		 * @return True if the value is equal in type and lexiographically, false otherwise.
 		 */
-		virtual bool equals(const value* rhs) const override {
+		virtual bool eq_impl(const value* rhs) const override {
 			if (const auto rhsarr = dynamic_cast<const array*>(rhs)) {
 				return rhsarr->m_arr == m_arr;
 			}

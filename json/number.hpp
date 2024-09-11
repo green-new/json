@@ -56,7 +56,7 @@ namespace json {
 		* @return This number casted to the integer type.
 		*/
 		template<typename Integer>
-		Integer as_int() {
+		Integer as_int() const {
 			return (Integer)m_number;
 		}
 		/**
@@ -100,9 +100,31 @@ namespace json {
 		 * @param rhs The other value.
 		 * @return True if the value is equal in type and lexiographically, false otherwise.
 		 */
-		virtual bool equals(const value* rhs) const override {
+		virtual bool eq_impl(const value* rhs) const override {
 			if (const auto rhsnum = dynamic_cast<const number*>(rhs)) {
 				return rhsnum->m_number == m_number;
+			}
+			return false;
+		}
+		/*
+		 * @brief Determines if the provided value is less than in terms of content.
+		 * Implementation dependent.
+		 * @return True if equal, false if not.
+		 */
+		virtual bool lt_impl(const value* val) const override {
+			if (const auto rhsnum = dynamic_cast<const number*>(rhs)) {
+				return m_number < rhsnum->m_number;
+			}
+			return false;
+		}
+		/*
+		 * @brief Determines if the provided value is greater than in terms of content.
+		 * Implementation dependent.
+		 * @return True if equal, false if not.
+		 */
+		virtual bool gt_impl(const value* val) const override {
+			if (const auto rhsnum = dynamic_cast<const number*>(rhs)) {
+				return m_number > rhsnum->m_number;
 			}
 			return false;
 		}
