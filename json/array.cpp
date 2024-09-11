@@ -2,22 +2,7 @@
 #include "object.hpp"
 #include <utility>
 
-// Access 
-json::value& json::array::at(size_t index) {
-	return *m_arr.at(index);
-}
-inline json::value& json::array::operator[](size_t index) {
-	return *m_arr[index];
-}
-inline json::value& json::array::front() noexcept {
-	return *m_arr.front();
-}
-inline json::value& json::array::back() noexcept {
-	return *m_arr.back();
-}
-inline json::array_container::value_type* json::array::data() noexcept {
-	return m_arr.data();
-}
+// Access
 json::array::iterator json::array::find(const json::value& json_value) {
 	return std::find_if(begin(), end(), [&](value_ptr& p) { return *p.get() == json_value; });
 }

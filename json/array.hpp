@@ -2,6 +2,7 @@
 
 #include "boolean.hpp"
 #include <concepts>
+#include <functional>
 #include "iterable.hpp"
 #include "null.hpp"
 #include "number.hpp"
@@ -9,6 +10,7 @@
 #include <set>
 #include "string.hpp"
 #include <sstream>
+#include <typeinfo>
 #include <utility>
 #include <vector>
 
@@ -39,14 +41,19 @@ namespace json {
 		array(array&& other) noexcept
 			: m_arr(std::move(other.m_arr)) {}
 		array& operator=(const array& other) {
+			m_arr.clear();
 			if (this != &other) {
-				*this = array(other);
+				for (const auto& elem : other.m_arr) {
+					// Clone the value (runtime polymorphism)
+					m_arr.push_back(elem->clone());
+				}
 			}
 			return *this;
 		}
 		array& operator=(array&& other) noexcept {
+			m_arr.clear();
 			if (this != &other) {
-				*this = array(std::forward<array>(other));
+				m_arr = std::move(other.m_arr);
 			}
 			return *this;
 		}
@@ -58,31 +65,41 @@ namespace json {
 		* @param index Index of the array.
 		* @returns The array element reference at the index, type erased to a 'value'.
 		*/
-		json::value& at(size_t index);
+		inline array_container::value_type::element_type& at(size_t index) {
+			return *m_arr.at(index);
+		}
 		/*
 		* @brief Gets the element at the provided index.
 		* An index that is not within the bounds is undefined behavior.
 		* @param index The index of the element within the array.
 		*/
-		inline json::value& operator[](size_t index);
+		inline json::value& operator[](size_t index) {
+			return *m_arr[index];
+		}
 		/**
 		* @brief Get the front 'value' in the array.
 		* An index that is not within the bounds is undefined behavior.
 		* @return The front 'value', type erased.
 		*/
-		inline json::value& front() noexcept;
+		inline json::value& front() noexcept {
+			return *m_arr.front();
+		}
 		/**
 		* @brief Get the back 'value' in the array.
 		* An index that is not within the bounds is undefined behavior.
 		* @return The back 'value', type erased.
 		*/
-		inline json::value& back() noexcept;
+		inline json::value& back() noexcept {
+			return *m_arr.back();
+		}
 		/**
 		* @brief Get the underlying contiguous pointer to the array, pointing to the first element.
 		* An uninitalized empty array cannot be dereferenced.
 		* @return The pointer to the first element, if it exists.
 		*/
-		inline array_container::value_type* data() noexcept;
+		inline array_container::value_type* data() noexcept {
+			return m_arr.data();
+		}
 	public:
 		/**
 		 * @brief Copies and pushes a JSON value into the end of this array.
@@ -118,8 +135,8 @@ namespace json {
 		 */
 		template<std::derived_from<value> JsonValueType, typename... CtorArgs>
 			requires std::constructible_from<JsonValueType, CtorArgs...>
-		array& emplace(JsonValueType&& value, CtorArgs&&... args) {
-			m_arr.push_back(std::make_unique<JsonValueType>(std::forward(args)...));
+		array& emplace(CtorArgs&&... args) {
+			m_arr.push_back(std::make_unique<JsonValueType>(std::forward<CtorArgs>(args)...));
 			return *this;
 		}
 		/*
@@ -127,7 +144,7 @@ namespace json {
 		 *
 		 * @return Last element in the array.
 		 */
-		value_ptr pop() noexcept;
+		array_container::value_type pop() noexcept;
 		/*
 		 * @brief Clears the array.
 		 */
@@ -148,8 +165,8 @@ namespace json {
 		template<std::predicate<const value&, size_t> Predicate>
 		iterator find_if(Predicate predicate) {
 			size_t i = 0;
-			for (const_iterator it = cbegin(); it != cend(); it++) {
-				if (Predicate(*it, i++)) {
+			for (iterator it = begin(); it != end(); it++) {
+				if (predicate(**it, i++)) {
 					return it;
 				}
 			}
@@ -165,8 +182,11 @@ namespace json {
 		std::set<std::reference_wrapper<JsonValueType>> of() {
 			std::set<std::reference_wrapper<JsonValueType>> res{};
 			for (const_iterator it = cbegin(); it != cend(); it++) {
-				if (JsonValueType& ref = dynamic_cast<JsonValueType&>(*it)) {
-					res.insert(std::ref(ref));
+				try {
+					JsonValueType& ref = dynamic_cast<JsonValueType&>(**it);
+					res.insert(std::ref<JsonValueType>(ref));
+				} catch (const std::bad_cast& e) {
+					throw e;
 				}
 			}
 			return res;
@@ -205,13 +225,13 @@ namespace json {
 		 */
 		size_t size() const noexcept;
 		/*
-		 * @brief Gets if this array is empty or not.
+		 * @brief Determines if this array is empty or not.
 		 * @returns True/false if this array is empty or not.
 		 */
 		bool empty() const noexcept;
 	protected:
 		/*
-		 * @brief Clone implementation
+		 * @brief Clone implementation.
 		 *
 		 * @return Raw pointer deep copy of this array.
 		 */
@@ -239,11 +259,12 @@ namespace json {
 		std::string to_string() const override {
 			std::ostringstream ss;
 			ss << '[';
-			for (size_t i = 0; i < m_arr.size() - 1; i++) {
-				ss << *m_arr[i];
-				ss << ',';
+			std::string sep = "";
+			for (const auto& elem : m_arr) {
+				ss << sep;
+				ss << *(elem.get());
+				sep = ",";
 			}
-			ss << *m_arr[m_arr.size() - 1];
 			ss << ']';
 			return ss.str();
 		}

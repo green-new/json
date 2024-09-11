@@ -10,23 +10,20 @@
 
 namespace json {
 	/**
-	* @class json::object
-	*
-	* @extends json::value
-	*
-	* @brief Represents a JSON object.
-	* Contains a map of ["name", value] pairs. Keeps track of the names of JSON values.
-	* Values cannot be nullptr.
-	* Duplicate named members follow the same rules as the standard library's @c std::map::insert.
-	*/
+	 * @class json::object
+	 *
+	 * @extends json::value
+	 *
+	 * @brief Represents a JSON object.
+	 * Contains a map of ["name", value] pairs. Keeps track of the names of JSON values.
+	 * Values cannot be nullptr.
+	 * Duplicate named members follow the same rules as the standard library's @c std::map::insert.
+	 */
 	class object final : public value, public iterable<prop_map> {
 	public:
 		object()
-			: m_name(), m_props() {}
-		explicit object(const std::string& name)
-			: m_name(name), m_props() {}
-		object(const object& other)
-			: m_name(other.m_name) {
+			: m_props() {}
+		object(const object& other) {
 			// Cannot copy unique ptrs. Must do a deep manual copy
 			m_props.clear();
 			for (const auto& [key, val] : other.m_props) {
@@ -37,32 +34,38 @@ namespace json {
 			}
 		}
 		object(object&& other) noexcept
-			: m_name(std::move(other.m_name)), m_props(std::move(other.m_props)) {}
+			: m_props(std::move(other.m_props)) {}
 		object& operator=(const object& other) {
 			if (this != &other) {
-				*this = object(other);
+				m_props.clear();
+				for (const auto& [key, val] : other.m_props) {
+					if (val) {
+						// Copy ctor called
+						m_props.insert({ key, val->clone() });
+					}
+				}
 			}
 			return *this;
 		}
 		object& operator=(object&& other) noexcept {
 			if (this != &other) {
-				*this = object(std::forward<object>(other));
+				m_props = std::move(other.m_props);
 			}
 			return *this;
 		}
 		~object() {}
 	public:
 		/*
-		* @brief Returns the number of members in this object.
-		*
-		* @returns Number of members in this object.
-		*/
+		 * @brief Returns the number of members in this object.
+		 *
+		 * @returns Number of members in this object.
+		 */
 		size_t size() const noexcept;
 		/**
-		* @brief Determines if this object is empty.
-		*
-		* @return True if empty, false if non-empty.
-		*/
+		 * @brief Determines if this object is empty.
+		 *
+		 * @return True if empty, false if non-empty.
+		 */
 		bool empty() const noexcept;
 		/**
 		 * @brief Determines if this and another object are equal by contents.
@@ -102,7 +105,7 @@ namespace json {
 		 */
 		template<std::derived_from<value> JsonValueType>
 		object& insert(const std::string& name, JsonValueType&& value) {
-			m_props.insert({ name, std::make_unique<JsonValueType>(std::forward(value)) }); // Move ctor
+			m_props.insert({ name, std::make_unique<JsonValueType>(std::forward<JsonValueType>(value)) }); // Move ctor
 			return *this;
 		}
 		/**
@@ -120,6 +123,10 @@ namespace json {
 			m_props.try_emplace(name, std::forward(args)...); // Ctor
 			return *this;
 		}
+		template<std::derived_from<value> JsonValueType>
+		JsonValueType& get(const std::string& name) {
+			return dynamic_cast<JsonValueType&>(*(m_props.at(name).get()));
+		}
 	public:
 		/*
 		* @brief Get the string representation of this 'object'.
@@ -127,14 +134,13 @@ namespace json {
 		*/
 		std::string to_string() const override {
 			std::ostringstream ss;
-			ss << '\"' << m_name << "\":";
 			ss << '{';
-			std::string padding = "";
+			std::string sep = "";
 			for (const auto& [key, val] : m_props) {
-				ss << padding;
+				ss << sep;
 				ss << '\"' << key << "\":";
-				ss << *val;
-				padding = ",";
+				ss << *(val.get());
+				sep = ",";
 			}
 			ss << '}';
 			return ss.str();
@@ -220,9 +226,5 @@ namespace json {
 		* @brief The object property (member) map.
 		*/
 		prop_map m_props{};
-		/**
-		* @brief The name of this object.
-		*/
-		std::string m_name;
 	};
 }

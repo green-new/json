@@ -29,13 +29,19 @@ namespace json {
 			: m_root(std::move(other.m_root)) {}
 		root& operator=(const root& other) {
 			if (this != &other) {
-				*this = root(other);
+				m_root.clear();
+				for (const auto& [key, val] : other.m_root) {
+					if (val) {
+						// Copy ctor called. Objects cannot be nullptr
+						m_root.insert({ key, val->clone() });
+					}
+				}
 			}
 			return *this;
 		}
 		root& operator=(root&& other) noexcept {
 			if (this != &other) {
-				*this = root(std::forward<root>(other));
+				m_root = std::move(other.m_root);
 			}
 			return *this;
 		}
@@ -53,7 +59,7 @@ namespace json {
 			requires std::constructible_from<JsonValueType, CtorArgs...>
 		&& std::derived_from<JsonValueType, json::value>
 			root& insert(const std::string& name, CtorArgs... ctorArgs) {
-			m_props.insert({ name, std::make_unique<JsonValueType>(std::forward<CtorArgs>(ctorArgs)...) });
+			m_root.insert({ name, std::make_unique<JsonValueType>(std::forward<CtorArgs>(ctorArgs)...) });
 			return *this;
 		}
 		/**
