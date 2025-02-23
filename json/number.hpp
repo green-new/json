@@ -111,7 +111,7 @@ namespace json {
 		 * Implementation dependent.
 		 * @return True if equal, false if not.
 		 */
-		virtual bool lt_impl(const value* val) const override {
+		virtual bool lt_impl(const value* rhs) const override {
 			if (const auto rhsnum = dynamic_cast<const number*>(rhs)) {
 				return m_number < rhsnum->m_number;
 			}
@@ -122,7 +122,7 @@ namespace json {
 		 * Implementation dependent.
 		 * @return True if equal, false if not.
 		 */
-		virtual bool gt_impl(const value* val) const override {
+		virtual bool gt_impl(const value* rhs) const override {
 			if (const auto rhsnum = dynamic_cast<const number*>(rhs)) {
 				return m_number > rhsnum->m_number;
 			}

@@ -1,6 +1,8 @@
 #pragma once
 #include <cstddef>
 #include <algorithm>
+#include <map>
+#include <string>
 
 namespace json {
 	namespace grammar {
@@ -8,14 +10,14 @@ namespace json {
 		* @brief '[' left square bracket.
 		*/
 		char begin_array = 0x5b,
-			/**
-			* @brief '{' left curly bracket.
-			*/
-			char begin_object = 0x7b,
-			/**
-			* @brief ']' right square bracket.
-			*/
-			char end_array = 0x5d;
+		/**
+		* @brief '{' left curly bracket.
+		*/
+		char begin_object = 0x7b,
+		/**
+		* @brief ']' right square bracket.
+		*/
+		char end_array = 0x5d;
 		/**
 		* @brief '}' right curly bracket.
 		*/
@@ -94,7 +96,7 @@ namespace json {
 		* @return True if whitespace, false if not.
 		*/
 		constexpr inline bool is_ws(char c) {
-			return c == space || c == ht || c == lfnl || c == cr;
+			return c == space || c == ht || c == nl || c == cr;
 		}
 		/**
 		* @brief Determines if the provided character @c is a newline (carriage return or new line) character.
@@ -111,26 +113,5 @@ namespace json {
 			{ begin_object, end_object },
 			{ begin_array, end_array },
 		};
-	}
-	std::string trim(const std::string& str) {
-		// Trim whitespace not within quotation marks
-		std::string res{};
-		bool parsingStr = false;
-		for (auto& it = str.begin(); it != str.end(); it++) {
-			char c = *it;
-			if (!parsingStr && c == json::grammar::quotation_mark) {
-				parsingStr = true;
-				continue;
-			} else if (parsingStr && c == json::grammar::quotation_mark) {
-				parsingStr = false;
-				continue;
-			}
-			if (!parsingStr && !std::isspace(c)) {
-				res.push_back(c);
-				continue;
-			}
-			res.push_back(c);
-		}
-		return res;
 	}
 }

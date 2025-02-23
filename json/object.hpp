@@ -163,24 +163,44 @@ namespace json {
 		 * @brief Equals implementation.
 		 *
 		 * @param rhs The other value.
-		 * @return True if the value is equal in type and lexiographically, false otherwise.
+		 * @return True if the two objects are equal in property size, property names, and property values.
 		 */
 		virtual bool eq_impl(const value* rhs) const override {
 			if (const auto rhsobj = dynamic_cast<const object*>(rhs)) {
-				bool f = true;
-				for (const auto& thisit = cbegin(), rhsit = rhs.cbegin(); thisit < cend() && rhsit < cend(); thisit++, rhsit++) {
-					f = f && (p.first > 
+				if (rhsobj->size() != this->size()) {
+					return false;
 				}
+				for (const auto& [key, val] : rhsobj->m_props) {
+					if (!this->contains(key)) {
+						return false;
+					}
+					if (m_props.at(key) != rhsobj->m_props.at(key)) {
+						return false;
+					}
+				}
+				return true;
 			}
 			return false;
+		}
 		/*
 		 * @brief Determines if the provided value is less than in terms of content.
 		 * Implementation dependent.
 		 * @return True if equal, false if not.
 		 */
-		virtual bool lt_impl(const value* val) const override {
-			if (const auto rhsobj = dynamic_cast<const number*>(rhs)) {
-				return m_number < rhsnum->m_number;
+		virtual bool lt_impl(const value* rhs) const override {
+			if (const auto rhsobj = dynamic_cast<const object*>(rhs)) {
+				if (rhsobj->size() != this->size()) {
+					return false;
+				}
+				for (const auto& [key, val] : rhsobj->m_props) {
+					if (!this->contains(key)) {
+						return false;
+					}
+					if (!(m_props.at(key) < rhsobj->m_props.at(key))) {
+						return false;
+					}
+				}
+				return true;
 			}
 			return false;
 		}
@@ -189,7 +209,22 @@ namespace json {
 		 * Implementation dependent.
 		 * @return True if equal, false if not.
 		 */
-		virtual bool gt_impl(const value* val) const = 0;
+		virtual bool gt_impl(const value* rhs) const = 0 {
+			if (const auto rhsobj = dynamic_cast<const object*>(rhs)) {
+				if (rhsobj->size() != this->size()) {
+					return false;
+				}
+				for (const auto& [key, val] : rhsobj->m_props) {
+					if (!this->contains(key)) {
+						return false;
+					}
+					if (!(m_props.at(key) > rhsobj->m_props.at(key))) {
+						return false;
+					}
+				}
+				return true;
+			}
+			return false;
 		}
 	public:
 		/**

@@ -45,6 +45,28 @@ namespace json {
 		boolean* clone_impl() const override {
 			return new boolean(*this);
 		}
+		/*
+		 * @brief Determines if the provided value is less than in terms of content.
+		 * Implementation dependent.
+		 * @return True if equal, false if not.
+		 */
+		virtual bool lt_impl(const value* rhs) const override {
+			if (const auto rhsbool = dynamic_cast<const boolean*>(rhs)) {
+				return rhsbool->m_boolean < m_boolean;
+			}
+			return false;
+		}
+		/*
+		* @brief Determines if the provided value is greater than in terms of content.
+		* Implementation dependent.
+		* @return True if equal, false if not.
+		*/
+		virtual bool gt_impl(const value* rhs) const override {
+			if (const auto rhsbool = dynamic_cast<const boolean*>(rhs)) {
+				return rhsbool->m_boolean > m_boolean;
+			}
+			return false;
+		}
 		/**
 		 * @brief Equals implementation.
 		 *

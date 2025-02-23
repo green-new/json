@@ -29,6 +29,22 @@ namespace json {
 		virtual null* clone_impl() const override {
 			return new null(*this);
 		}
+		/*
+		 * @brief Determines if the provided value is less than in terms of content.
+		 * Implementation dependent.
+		 * @return True if equal, false if not.
+		 */
+		virtual bool lt_impl(const value* rhs) const override {
+			return eq_impl(rhs);
+		}
+		/*
+		* @brief Determines if the provided value is greater than in terms of content.
+		* Implementation dependent.
+		* @return True if equal, false if not.
+		*/
+		virtual bool gt_impl(const value * rhs) const override {
+			return eq_impl(rhs);
+		}
 		/**
 		 * @brief Equals implementation.
 		 *

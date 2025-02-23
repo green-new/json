@@ -36,6 +36,28 @@ namespace json {
 		virtual string* clone_impl() const override {
 			return new string(*this);
 		}
+		/*
+		 * @brief Determines if the provided value is less than in terms of content.
+		 * Implementation dependent.
+		 * @return True if equal, false if not.
+		 */
+		virtual bool lt_impl(const value* rhs) const override {
+			if (const auto rhsstr = dynamic_cast<const string*>(rhs)) {
+				return m_string < rhsstr->m_string;
+			}
+			return false;
+		}
+		/*
+		 * @brief Determines if the provided value is greater than in terms of content.
+		 * Implementation dependent.
+		 * @return True if equal, false if not.
+		 */
+		virtual bool gt_impl(const value* rhs) const override {
+			if (const auto rhsstr = dynamic_cast<const string*>(rhs)) {
+				return m_string > rhsstr->m_string;
+			}
+			return false;
+		}
 		/**
 		 * @brief Equals implementation.
 		 *
