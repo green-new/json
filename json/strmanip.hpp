@@ -112,19 +112,25 @@ namespace json {
 			{ begin_array, end_array },
 		};
 	}
-	void trim(std::string& str) {
+	std::string trim(const std::string& str) {
 		// Trim whitespace not within quotation marks
-		bool parsingStr;
+		std::string res{};
+		bool parsingStr = false;
 		for (auto& it = str.begin(); it != str.end(); it++) {
 			char c = *it;
 			if (!parsingStr && c == json::grammar::quotation_mark) {
 				parsingStr = true;
+				continue;
 			} else if (parsingStr && c == json::grammar::quotation_mark) {
 				parsingStr = false;
+				continue;
 			}
-			if (!parsingStr && std::isspace(c)) {
-				str.erase(it);
+			if (!parsingStr && !std::isspace(c)) {
+				res.push_back(c);
+				continue;
 			}
+			res.push_back(c);
 		}
+		return res;
 	}
 }

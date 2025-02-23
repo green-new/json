@@ -42,7 +42,7 @@ namespace json {
 		 * @param rhs The other value.
 		 * @return True if the value is equal in type and lexiographically, false otherwise.
 		 */
-		virtual bool equals(const value* rhs) const override {
+		virtual bool eq_impl(const value* rhs) const override {
 			if (const auto rhsstr = dynamic_cast<const string*>(rhs)) {
 				return rhsstr->m_string == m_string;
 			}

@@ -33,10 +33,13 @@ namespace json {
 		 * @brief Equals implementation.
 		 *
 		 * @param rhs The other value.
-		 * @return Always returns true.
+		 * @return Returns true if rhs is of runtime type 'null'
 		 */
-		virtual bool equals(const value* rhs) const override {
-			return true;
+		virtual bool eq_impl(const value* rhs) const override {
+			if (const auto rhsnull = dynamic_cast<const null*>(rhs)) {
+				return true; 
+			}
+			return false;
 		}
 	};
 }
