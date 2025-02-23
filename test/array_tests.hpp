@@ -88,12 +88,6 @@ TESTFUNC(ArrayTest_FindIf, testing* test) {
 	return test_result::SUCCESS;
 }
 
-TESTFUNC(ArrayTest_Of, testing* test) {
-	auto s = ARRAY.of<json::array>();
-	TASSERT(s.size(), 1);
-	return test_result::SUCCESS;
-}
-
 TESTFUNC(ArrayTest_Erase, testing* test) {
 
 	return test_result::SUCCESS;

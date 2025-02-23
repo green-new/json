@@ -22,7 +22,6 @@ int main(int argc, char** argv) {
 	TEST(tr, ArrayTest_Emplace(&test), "Array: emplace() test failed");
 	TEST(tr, ArrayTest_Pop(&test), "Array: pop() test failed");
 	TEST(tr, ArrayTest_FindIf(&test), "Array: find_if() test failed");
-	TEST(tr, ArrayTest_Of(&test), "Array: of() test failed");
 	TEST(tr, ArrayTest_Erase(&test), "Array: erase(i) test failed");
 	TEST(tr, ArrayTest_EraseC(&test), "Array: erase(ci) test failed");
 	TEST(tr, ArrayTest_EraseRange(&test), "Array: erase(i, i) test failed");

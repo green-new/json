@@ -172,25 +172,6 @@ namespace json {
 			}
 			return end();
 		}
-		/**
-		 * @brief Gets a set of the references to elements in the array of type JsonValueType.
-		 *
-		 * @tparam JsonValueType The type of the JSON value references to retrieve.
-		 * @return The set of JSON values of the provided JSON value type.
-		 */
-		template<std::derived_from<value> JsonValueType>
-		std::set<std::reference_wrapper<JsonValueType>> of() {
-			std::set<std::reference_wrapper<JsonValueType>> res{};
-			for (const_iterator it = cbegin(); it != cend(); it++) {
-				try {
-					JsonValueType& ref = dynamic_cast<JsonValueType&>(**it);
-					res.insert(std::ref<JsonValueType>(ref));
-				} catch (const std::bad_cast& e) {
-					throw e;
-				}
-			}
-			return res;
-		}
 		/*
 		 * @brief Erases the element at the provided iterator.
 		 * @param pos The position of the element to erase.
