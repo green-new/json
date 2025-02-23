@@ -50,7 +50,7 @@ namespace json {
 		 * 
 		 * @return true/false, if val is less than to this value by content, determined by 'gt' implementation.
 		 */
-		bool operator<(const value& val) const {
+		bool operator>(const value& val) const {
 			return gt_impl(&val);
 		}
 		/*

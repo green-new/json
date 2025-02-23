@@ -102,7 +102,7 @@ namespace json {
 		 */
 		virtual bool eq_impl(const value* rhs) const override {
 			if (const auto rhsnum = dynamic_cast<const number*>(rhs)) {
-				return rhsnum->m_number == m_number;
+				return m_number == rhsnum->m_number;
 			}
 			return false;
 		}

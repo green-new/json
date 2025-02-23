@@ -52,7 +52,7 @@ namespace json {
 		 */
 		virtual bool lt_impl(const value* rhs) const override {
 			if (const auto rhsbool = dynamic_cast<const boolean*>(rhs)) {
-				return rhsbool->m_boolean < m_boolean;
+				return m_boolean < rhsbool->m_boolean;
 			}
 			return false;
 		}
@@ -63,7 +63,7 @@ namespace json {
 		*/
 		virtual bool gt_impl(const value* rhs) const override {
 			if (const auto rhsbool = dynamic_cast<const boolean*>(rhs)) {
-				return rhsbool->m_boolean > m_boolean;
+				return m_boolean > rhsbool->m_boolean;
 			}
 			return false;
 		}
@@ -75,7 +75,7 @@ namespace json {
 		 */
 		virtual bool eq_impl(const value* rhs) const override {
 			if (const auto rhsbool = dynamic_cast<const boolean*>(rhs)) {
-				return rhsbool->m_boolean == m_boolean;
+				return m_boolean == rhsbool->m_boolean;
 			}
 			return false;
 		}

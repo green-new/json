@@ -13,7 +13,7 @@ struct testing {
 	testing() {
 		// Initialize object; assumes insert works correctly
 		m_testobject = json::object{};
-		m_testobject.insert("name", json::string{ "Tristen Woodruff" });
+		m_testobject.insert("name", json::string{ "John Doe" });
 		m_testobject.insert("salary", json::number{ 30000.1245f });
 		m_testobject.insert("stuff", json::array{ });
 		m_testobject.insert("employed", json::boolean{ true });

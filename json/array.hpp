@@ -199,25 +199,6 @@ namespace json {
 		 * @returns The iterator following the last deleted element.
 		 */
 		constexpr iterator erase(const_iterator first, const_iterator last) noexcept;
-		/*
-		 * @brief Cast the provided value pointer to a reference of the provided JSON value type.
-		 * 
-		 * @throws std::bad_cast if the provided ptr cannot be cast to the provided type.
-		 * @tparam JsonValueType Type of the JSON value.
-		 * @param ptr Value pointer to the JSON value.
-		 * @return Reference to the casted type.
-		 */
-		template<std::derived_from<value> JsonValueType>
-		static JsonValueType& deref(array_container::value_type& ptr) const {
-			JsonValueType* o;
-			try {
-				// value_ptr -> value* -> cast to JsonValueType* -> set to o
-				o = dynamic_cast<JsonValueType*>(ptr.get());
-			} catch (const std::bad_cast& e ) {
-				throw e;
-			}
-			return *o;
-		}
 	public:
 		/*
 		 * @brief Gets the size of the array.
@@ -246,7 +227,29 @@ namespace json {
 		 */
 		virtual bool eq_impl(const value* rhs) const override {
 			if (const auto rhsarr = dynamic_cast<const array*>(rhs)) {
-				return rhsarr->m_arr == m_arr;
+				return m_arr == rhsarr->m_arr;
+			}
+			return false;
+		}
+		/*
+		 * @brief Determines if the provided value is less than in terms of content.
+		 * Implementation dependent.
+		 * @return True if equal, false if not.
+		 */
+		virtual bool lt_impl(const value* rhs) const override {
+			if (const auto rhsarr = dynamic_cast<const array*>(rhs)) {
+				return m_arr < rhsarr->m_arr;
+			}
+			return false;
+		}
+		/*
+		* @brief Determines if the provided value is greater than in terms of content.
+		* Implementation dependent.
+		* @return True if equal, false if not.
+		*/
+		virtual bool gt_impl(const value* rhs) const override {
+			if (const auto rhsarr = dynamic_cast<const array*>(rhs)) {
+				return m_arr > rhsarr->m_arr;
 			}
 			return false;
 		}

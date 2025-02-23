@@ -66,7 +66,7 @@ namespace json {
 		 */
 		virtual bool eq_impl(const value* rhs) const override {
 			if (const auto rhsstr = dynamic_cast<const string*>(rhs)) {
-				return rhsstr->m_string == m_string;
+				return m_string == rhsstr->m_string;
 			}
 			return false;
 		}

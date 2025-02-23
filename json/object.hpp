@@ -209,7 +209,7 @@ namespace json {
 		 * Implementation dependent.
 		 * @return True if equal, false if not.
 		 */
-		virtual bool gt_impl(const value* rhs) const = 0 {
+		virtual bool gt_impl(const value* rhs) const override {
 			if (const auto rhsobj = dynamic_cast<const object*>(rhs)) {
 				if (rhsobj->size() != this->size()) {
 					return false;
